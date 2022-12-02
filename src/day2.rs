@@ -16,7 +16,13 @@ pub fn run() {
         .lines()
         .map(|line| {
             let opponent_choice = parse_shape(line.as_bytes()[0]);
-            let own_choice = get_shape_for_result(opponent_choice, line.as_bytes()[2]);
+            let result = match line.as_bytes()[2] {
+                b'X' => Lose,
+                b'Y' => Draw,
+                b'Z' => Win,
+                _ => unreachable!(),
+            };
+            let own_choice = get_shape_for_result(opponent_choice, result);
             single_round_score(opponent_choice, own_choice)
         })
         .sum();
@@ -31,6 +37,13 @@ enum Shape {
 }
 use Shape::*;
 
+enum RoundResult {
+    Win,
+    Draw,
+    Lose,
+}
+use RoundResult::*;
+
 fn single_round_score(opponent_choice: Shape, own_choice: Shape) -> u32 {
     let shape_score = match own_choice {
         Rock => 1,
@@ -38,10 +51,12 @@ fn single_round_score(opponent_choice: Shape, own_choice: Shape) -> u32 {
         Scissors => 3,
     };
 
-    let outcome_score = match (opponent_choice, own_choice) {
-        (Rock, Paper) | (Paper, Scissors) | (Scissors, Rock) => 6,
-        (a, b) if a == b => 3,
-        _ => 0,
+    let outcome_score = if own_choice == get_shape_for_result(opponent_choice, Win) {
+        6
+    } else if own_choice == opponent_choice {
+        3
+    } else {
+        0
     };
 
     shape_score + outcome_score
@@ -56,19 +71,18 @@ fn parse_shape(char: u8) -> Shape {
     }
 }
 
-fn get_shape_for_result(opponent_choice: Shape, result: u8) -> Shape {
+fn get_shape_for_result(opponent_choice: Shape, result: RoundResult) -> Shape {
     match result {
-        b'X' => match opponent_choice {
+        Lose => match opponent_choice {
             Rock => Scissors,
             Paper => Rock,
             Scissors => Paper,
         },
-        b'Y' => opponent_choice,
-        b'Z' => match opponent_choice {
+        Draw => opponent_choice,
+        Win => match opponent_choice {
             Rock => Paper,
             Paper => Scissors,
             Scissors => Rock,
         },
-        _ => unreachable!(),
     }
 }
