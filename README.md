@@ -3,9 +3,9 @@
 ## Goals
 
 - Have fun
-- Leant stuff
-- Fast execution time (< 1 second)
-- Read inputs from files (or stdin)
+- Learn stuff
+- Fast execution time (< 1 second for whole set of puzzles)
+- Read inputs from files (or stdin) instead of `include_str!()`ing their contents into the executable
 - (optional) Better error handling
 
 ## Learnings
