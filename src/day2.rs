@@ -22,9 +22,9 @@ pub fn run() {
                 b'Z' => WIN,
                 _ => unreachable!(),
             };
-            let own_shape = *[Rock, Paper, Scissors]
-                .iter()
-                .find(|&&shape| get_round_outcome_score(opponent_shape, shape) == round_result)
+            let own_shape = [Rock, Paper, Scissors]
+                .into_iter()
+                .find(|&shape| get_round_outcome_score(opponent_shape, shape) == round_result)
                 .unwrap();
             own_shape as u32 + round_result
         })
