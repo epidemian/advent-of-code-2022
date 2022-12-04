@@ -2,7 +2,7 @@ use std::fs;
 
 pub fn run() {
     let input = fs::read_to_string("inputs/day2.txt").unwrap();
-    let ans1: u32 = input
+    let total_score: u32 = input
         .lines()
         .map(|line| {
             let opponent_shape = parse_shape(line.as_bytes()[0]);
@@ -10,9 +10,9 @@ pub fn run() {
             own_shape as u32 + get_round_outcome_score(opponent_shape, own_shape)
         })
         .sum();
-    println!("{}", ans1);
+    println!("{}", total_score);
 
-    let ans2: u32 = input
+    let total_score_2: u32 = input
         .lines()
         .map(|line| {
             let opponent_shape = parse_shape(line.as_bytes()[0]);
@@ -29,7 +29,7 @@ pub fn run() {
             own_shape as u32 + round_result
         })
         .sum();
-    println!("{}", ans2);
+    println!("{}", total_score_2);
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
