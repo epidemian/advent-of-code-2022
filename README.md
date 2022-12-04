@@ -23,3 +23,7 @@ Simple starter challenge. I learned how to read an entire file into a string :)
 I overcomplicated the solution at first but then managed to find a better way to express part 2's logic re-using the function to compute the round score used for part 2.
 
 I learned/remembered that enum values can be cast to their corresponding integer values by using the `as` operator. E.g., `anEnumValue as u32`.
+
+### Day 3: Rucksack Reorganization
+
+Learned about slice::split_at(n), which is very convenient for splitting things without allocating. And also that there's no good solution for chunking an iterator on Rust stable channel yet.
