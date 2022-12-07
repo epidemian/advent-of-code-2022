@@ -30,4 +30,6 @@ Learned about slice::split_at(n), which is very convenient for splitting things 
 
 ### Day 4: Camp Cleanup
 
-This one was a simple boolean logic puzzle. A nice breather before harder things to come for sure :)
+This one was a simple boolean logic puzzle. A nice breather before harder things to come for sure.
+
+Learned that using str::split() and collecting the results into a dynamic Vec and then pattern-matching a full slice of that array into variables is a very convenient way of parsing some of these puzzles :)
