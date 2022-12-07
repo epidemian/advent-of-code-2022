@@ -16,12 +16,12 @@ pub fn run(input: &str) -> (u32, u32) {
                 b'X' => LOSE,
                 b'Y' => DRAW,
                 b'Z' => WIN,
-                _ => unreachable!(),
+                ch => unreachable!("unexpected character '{}'", ch as char),
             };
             let own_shape = [Rock, Paper, Scissors]
                 .into_iter()
                 .find(|&shape| get_round_outcome_score(opponent_shape, shape) == round_result)
-                .unwrap();
+                .expect("there must exist a shape to have round_result against the opponent_shape");
             own_shape as u32 + round_result
         })
         .sum();
@@ -54,6 +54,6 @@ fn parse_shape(char: u8) -> Shape {
         b'A' | b'X' => Rock,
         b'B' | b'Y' => Paper,
         b'C' | b'Z' => Scissors,
-        _ => unreachable!(),
+        ch => unreachable!("unexpected character '{}'", ch as char),
     }
 }

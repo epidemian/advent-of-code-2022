@@ -1,7 +1,15 @@
 pub fn run(input: &str) -> (u32, u32) {
     let mut sorted_calories_by_elf: Vec<u32> = input
         .split("\n\n")
-        .map(|s| s.lines().map(|l| l.parse::<u32>().unwrap()).sum())
+        .map(|elf_items| {
+            elf_items
+                .lines()
+                .map(|line| {
+                    line.parse::<u32>()
+                        .expect("each line should have a valid number of calories")
+                })
+                .sum()
+        })
         .collect();
     sorted_calories_by_elf.sort();
 
