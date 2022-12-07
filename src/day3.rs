@@ -1,7 +1,4 @@
-use std::fs;
-
-pub fn run() {
-    let input = fs::read_to_string("inputs/day3.txt").unwrap();
+pub fn run(input: &str) {
     let lines: Vec<_> = input.lines().collect();
     let shared_items_priority_sum: u32 = lines
         .iter()

@@ -1,7 +1,4 @@
-use std::fs;
-
-pub fn run() {
-    let input = fs::read_to_string("inputs/day2.txt").unwrap();
+pub fn run(input: &str) {
     let total_score: u32 = input
         .lines()
         .map(|line| {
