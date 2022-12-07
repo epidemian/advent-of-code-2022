@@ -1,4 +1,4 @@
-pub fn run(input: &str) {
+pub fn run(input: &str) -> (u32, u32) {
     let lines: Vec<_> = input.lines().collect();
     let shared_items_priority_sum: u32 = lines
         .iter()
@@ -13,7 +13,6 @@ pub fn run(input: &str) {
             priority_for_item_type(shared_item_type) as u32
         })
         .sum();
-    println!("{}", shared_items_priority_sum);
 
     let group_badges_priority_sum: u32 = lines
         .chunks(3)
@@ -30,7 +29,8 @@ pub fn run(input: &str) {
             priority_for_item_type(badge) as u32
         })
         .sum();
-    println!("{}", group_badges_priority_sum);
+
+    (shared_items_priority_sum, group_badges_priority_sum)
 }
 
 fn priority_for_item_type(item_type: u8) -> u8 {

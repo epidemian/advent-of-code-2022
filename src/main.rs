@@ -12,7 +12,8 @@ fn main() -> ExitCode {
         let filename = format!("inputs/day{}.txt", day_num);
         match fs::read_to_string(&filename) {
             Ok(input) => {
-                days[day_num - 1](&input);
+                let (ans1, ans2) = days[day_num - 1](&input);
+                println!("{}\n{}", ans1, ans2);
                 Ok(())
             }
             Err(err) => {

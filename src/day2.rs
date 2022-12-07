@@ -1,4 +1,4 @@
-pub fn run(input: &str) {
+pub fn run(input: &str) -> (u32, u32) {
     let total_score: u32 = input
         .lines()
         .map(|line| {
@@ -7,7 +7,6 @@ pub fn run(input: &str) {
             own_shape as u32 + get_round_outcome_score(opponent_shape, own_shape)
         })
         .sum();
-    println!("{}", total_score);
 
     let total_score_2: u32 = input
         .lines()
@@ -26,7 +25,8 @@ pub fn run(input: &str) {
             own_shape as u32 + round_result
         })
         .sum();
-    println!("{}", total_score_2);
+
+    (total_score, total_score_2)
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
