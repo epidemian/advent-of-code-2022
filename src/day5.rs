@@ -1,13 +1,13 @@
 pub fn run(input: &str) -> String {
-    let (initial_state_section, procedure_section) = input
+    let (initial_stacks_section, crane_moves_section) = input
         .split_once("\n\n")
         .expect("input should have two sections separated by double newlines");
-    let procedure_moves = parse_moves(procedure_section);
-    let initial_stacks = parse_stacks(initial_state_section);
+    let initial_stacks = parse_stacks(initial_stacks_section);
+    let crane_moves = parse_moves(crane_moves_section);
 
     let mut stacks = initial_stacks.clone();
-    for &Move(amount, from, to) in procedure_moves.iter() {
-        for _ in 0..amount {
+    for &Move(crate_count, from, to) in crane_moves.iter() {
+        for _ in 0..crate_count {
             let top_crate = stacks[from].pop().expect("stack should have a crate");
             stacks[to].push(top_crate);
         }
@@ -15,8 +15,8 @@ pub fn run(input: &str) -> String {
     let part_1_ans = get_top_crate_letters(&stacks);
 
     let mut stacks = initial_stacks.clone();
-    for &Move(amount, from, to) in procedure_moves.iter() {
-        let bottom_crate_index = stacks[from].len() - amount;
+    for &Move(crate_count, from, to) in crane_moves.iter() {
+        let bottom_crate_index = stacks[from].len() - crate_count;
         let mut moved_crates: Vec<_> = stacks[from].drain(bottom_crate_index..).collect();
         stacks[to].append(&mut moved_crates);
     }
@@ -56,10 +56,10 @@ fn parse_move(line: &str) -> Move {
         .split(' ')
         .filter_map(|word| word.parse().ok())
         .collect();
-    let [amount, from, to] = nums[..] else {
+    let [crate_count, from, to] = nums[..] else {
         panic!("invalid line {line}")
     };
-    Move(amount, from - 1, to - 1)
+    Move(crate_count, from - 1, to - 1)
 }
 
 fn get_top_crate_letters(stacks: &[Stack]) -> String {
