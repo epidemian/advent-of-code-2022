@@ -1,4 +1,4 @@
-pub fn run(input: &str) -> (u32, u32) {
+pub fn run(input: &str) -> String {
     let total_score: u32 = input
         .lines()
         .map(|line| {
@@ -26,7 +26,7 @@ pub fn run(input: &str) -> (u32, u32) {
         })
         .sum();
 
-    (total_score, total_score_2)
+    format!("{total_score} {total_score_2}")
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]

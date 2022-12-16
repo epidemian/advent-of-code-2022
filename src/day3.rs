@@ -1,4 +1,4 @@
-pub fn run(input: &str) -> (u32, u32) {
+pub fn run(input: &str) -> String {
     let lines: Vec<_> = input.lines().collect();
     let shared_items_priority_sum: u32 = lines
         .iter()
@@ -30,7 +30,7 @@ pub fn run(input: &str) -> (u32, u32) {
         })
         .sum();
 
-    (shared_items_priority_sum, group_badges_priority_sum)
+    format!("{shared_items_priority_sum} {group_badges_priority_sum}")
 }
 
 fn priority_for_item_type(item_type: u8) -> u8 {

@@ -1,4 +1,4 @@
-pub fn run(input: &str) -> (u32, u32) {
+pub fn run(input: &str) -> String {
     let (initial_state_section, procedure_section) = input
         .split_once("\n\n")
         .expect("input should have two sections separated by double newlines");
@@ -12,10 +12,7 @@ pub fn run(input: &str) -> (u32, u32) {
             stacks[to].push(top_crate);
         }
     }
-    for stack in stacks {
-        print!("{}", stack.last().expect("stack should have a crate"));
-    }
-    println!();
+    let part_1_ans = get_top_crate_letters(&stacks);
 
     let mut stacks = initial_stacks.clone();
     for &Move(amount, from, to) in procedure_moves.iter() {
@@ -23,12 +20,9 @@ pub fn run(input: &str) -> (u32, u32) {
         let mut moved_crates: Vec<_> = stacks[from].drain(bottom_crate_index..).collect();
         stacks[to].append(&mut moved_crates);
     }
-    for stack in stacks {
-        print!("{}", stack.last().expect("stack should have a crate"));
-    }
-    println!();
+    let part_2_ans = get_top_crate_letters(&stacks);
 
-    (0, 0)
+    format!("{part_1_ans} {part_2_ans}")
 }
 
 type Stack = Vec<char>;
@@ -66,4 +60,8 @@ fn parse_move(line: &str) -> Move {
         panic!("invalid line {line}")
     };
     Move(amount, from - 1, to - 1)
+}
+
+fn get_top_crate_letters(stacks: &[Stack]) -> String {
+    stacks.iter().filter_map(|stack| stack.last()).collect()
 }

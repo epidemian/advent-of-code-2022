@@ -14,8 +14,8 @@ fn main() -> ExitCode {
         let filename = format!("inputs/day{}.txt", day_num);
         match fs::read_to_string(&filename) {
             Ok(input) => {
-                let (ans1, ans2) = days[day_num - 1](&input);
-                println!("{}\n{}", ans1, ans2);
+                let output = days[day_num - 1](&input);
+                println!("Day {day_num}: {output}");
                 Ok(())
             }
             Err(err) => {
@@ -28,7 +28,6 @@ fn main() -> ExitCode {
     match args.len() {
         1 => {
             for day_num in 1..=days.len() {
-                println!("Day {}", day_num);
                 if run_single_day(day_num).is_err() {
                     return ExitCode::FAILURE;
                 };

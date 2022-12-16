@@ -1,4 +1,4 @@
-pub fn run(input: &str) -> (u32, u32) {
+pub fn run(input: &str) -> String {
     let mut fully_overlapping_pairs = 0;
     let mut overlapping_pairs = 0;
 
@@ -22,5 +22,5 @@ pub fn run(input: &str) -> (u32, u32) {
         }
     }
 
-    (fully_overlapping_pairs, overlapping_pairs)
+    format!("{fully_overlapping_pairs} {overlapping_pairs}")
 }
