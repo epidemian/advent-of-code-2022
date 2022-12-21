@@ -7,23 +7,25 @@ use std::collections::HashMap;
 pub fn run(input: &str) -> String {
     let root = parse_fs_from_terminal_output(input);
 
+    let dir_sizes: Vec<usize> = root
+        .iter()
+        .filter(|node| matches!(node, FsNode::Dir(..)))
+        .map(|node| node.size())
+        .collect();
+
+    let small_dirs_total_size: usize = dir_sizes
+        .iter()
+        .filter(|dir_size| **dir_size <= 100_000)
+        .sum();
+
     let unused_space = 70_000_000 - root.size();
     let space_to_free_up = 30_000_000 - unused_space;
 
-    let mut small_dirs_total_size = 0;
-    let mut file_to_delete_size = usize::MAX;
-
-    root.walk(&mut |node| {
-        if let FsNode::Dir(..) = node {
-            let size = node.size();
-            if size <= 100_000 {
-                small_dirs_total_size += size;
-            }
-            if size >= space_to_free_up && size < file_to_delete_size {
-                file_to_delete_size = size;
-            }
-        }
-    });
+    let file_to_delete_size = dir_sizes
+        .iter()
+        .filter(|size| **size >= space_to_free_up)
+        .min()
+        .expect("there should be a big-enough directory to free up space for the update");
 
     format!("{small_dirs_total_size} {file_to_delete_size}")
 }
@@ -49,16 +51,41 @@ impl FsNode {
         }
     }
 
-    fn walk<F>(&self, walk_fn: &mut F)
-    where
-        F: FnMut(&FsNode),
-    {
-        walk_fn(self);
-        if let FsNode::Dir(dir) = self {
-            for child in dir.children.values() {
-                child.walk(walk_fn);
-            }
+    fn iter(&self) -> FsIterator {
+        FsIterator::new(self)
+    }
+}
+
+struct FsIterator<'a> {
+    node: Option<&'a FsNode>,
+    children_iter: Option<Box<dyn Iterator<Item = &'a FsNode> + 'a>>,
+}
+
+impl FsIterator<'_> {
+    fn new(node: &FsNode) -> FsIterator {
+        FsIterator {
+            node: Some(node),
+            children_iter: None,
         }
+    }
+}
+
+impl<'a> Iterator for FsIterator<'a> {
+    type Item = &'a FsNode;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(node) = self.node {
+            if let FsNode::Dir(dir) = node {
+                let children_iter = dir.children.values().flat_map(|node| FsIterator::new(node));
+                self.children_iter = Some(Box::new(children_iter));
+            }
+            self.node = None;
+            return Some(node);
+        }
+        if let Some(ref mut children_iter) = self.children_iter {
+            return children_iter.next();
+        }
+        None
     }
 }
 
