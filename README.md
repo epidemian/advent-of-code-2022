@@ -44,3 +44,13 @@ I did struggle trying to find an optimal way of doing the bulk moves of part 2, 
 ### Day 6: Tuning Trouble
 
 A much simpler puzzle that the previous one. Almost no parsing required, and the uniqueness check was straightforward to implement using a HashSet. There are surely optimization tricks that could be applied if we wanted to make this algorithm more optimal, like keeping track of the last N characters in a `HashMap<u8, usize>` and not having to recompute (and re-hash) the unique characters on each step.
+
+### Day 7: No Space Left On Device
+
+This was a tricky one. At first i tried building a tree data structure from the terminal output, but that approach soon became too complicated and then i abandoned [in favor of using a much simpler data structure](src/day7.rs) for the FS nodes, where the directory sizes were calculated directly while parsing the terminal output and stored in a flat `HashMap<String, usize>` where the keys were full directory paths like `"/foo/bar"`.
+
+After getting the answers with the simple and direct solution, i tried [modelling the FS with a tree](src/day7_tree.rs) again, and although that approach required more code and is in general more complicated, i am happy to at least having figured it out :)
+
+The latter approach required some rather tricky bookkeeping of mutable references while building the tree. And i was almost sure i was not going to convince the borrow checker that everything was fine and was going to need some escape-hatch like using `Cell`s or something like that. But luckily no such hacks were needed: all it took was learning about `ref` bindings.
+
+I found it also a bit cumbersome to implement the `FsNode::walk(fn)` function, or rather to declare its type correctly. I guess i could have also tried implementing a custom iterator for `FsNode`, but that seemed even more daunting.
