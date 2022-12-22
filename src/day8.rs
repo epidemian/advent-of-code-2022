@@ -3,8 +3,9 @@ pub fn run(input: &str) -> String {
         .lines()
         .map(|line| line.as_bytes().iter().map(|ch| ch - b'0').collect())
         .collect();
-    let grid_height = grid.len() as isize;
-    let grid_width = grid[0].len() as isize;
+    let grid_height = grid.len();
+    let grid_width = grid[0].len();
+    let directions = [(0, -1), (0, 1), (-1, 0), (1, 0)];
 
     let mut visible_trees = 0;
     let mut best_scenic_score = 0;
@@ -12,19 +13,21 @@ pub fn run(input: &str) -> String {
         for (x, tree_height) in row.iter().enumerate() {
             let mut visible = false;
             let mut viewing_distances = [0; 4];
-            for (i, &(dx, dy)) in DIRECTIONS.iter().enumerate() {
-                let (mut x, mut y) = (x as isize, y as isize);
+            for (i, &(dx, dy)) in directions.iter().enumerate() {
+                let (mut x, mut y) = (x, y);
                 loop {
-                    x += dx;
-                    y += dy;
-                    if x < 0 || x >= grid_width || y < 0 || y >= grid_height {
+                    // Let negative out-of-bounds wrap around and only check for
+                    // going over the grid size.
+                    x = x.wrapping_add_signed(dx);
+                    y = y.wrapping_add_signed(dy);
+                    if x >= grid_width || y >= grid_height {
                         // Viewing distance extends to the edge of the grid, so
                         // the tree is visible.
                         visible = true;
                         break;
                     }
                     viewing_distances[i] += 1;
-                    if grid[y as usize][x as usize] >= *tree_height {
+                    if grid[y][x] >= *tree_height {
                         break;
                     }
                 }
@@ -37,5 +40,3 @@ pub fn run(input: &str) -> String {
 
     format!("{visible_trees} {best_scenic_score}")
 }
-
-const DIRECTIONS: [(isize, isize); 4] = [(0, -1), (0, 1), (-1, 0), (1, 0)];
