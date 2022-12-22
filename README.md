@@ -54,3 +54,7 @@ After getting the answers with the simple and direct solution, i tried [modellin
 The latter approach required some rather tricky bookkeeping of mutable references while building the tree. And i was almost sure i was not going to convince the borrow checker that everything was fine and was going to need some escape-hatch like using `Cell`s or something like that. But luckily no such hacks were needed: all it took was learning about `ref` bindings.
 
 I found it also a bit cumbersome to implement the `FsNode::walk(fn)` function, or rather to declare its type correctly. I guess i could have also tried implementing a custom iterator for `FsNode`, but that seemed even more daunting.
+
+### Day 8: Treetop Tree House
+
+A nice grid-based puzzle. Learned about using `an_usize_val.wrapping_add_signed(an_isize_val)` for doing maths without needing to do lots of type conversions between signed and unsigned integers. Also learned about the `.product()` iterator function.
