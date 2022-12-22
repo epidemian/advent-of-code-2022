@@ -58,3 +58,7 @@ I found it also a bit cumbersome to implement the `FsNode::walk(fn)` function, o
 ### Day 8: Treetop Tree House
 
 A nice grid-based puzzle. Learned about using `an_usize_val.wrapping_add_signed(an_isize_val)` for doing maths without needing to do lots of type conversions between signed and unsigned integers. Also learned about the `.product()` iterator function.
+
+### Day 9: Rope Bridge
+
+A simple 2D movement puzzle. I really liked the generalization of the rope length needed for Part 2. Got an excuse to learn about and use `std::iter::repeat()` to flatten the step moves into a flat iterator :)

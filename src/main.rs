@@ -9,6 +9,7 @@ mod day6;
 mod day7;
 mod day7_tree;
 mod day8;
+mod day9;
 
 fn main() -> ExitCode {
     let args: Vec<_> = env::args().collect();
@@ -21,6 +22,7 @@ fn main() -> ExitCode {
         day6::run,
         day7::run,
         day8::run,
+        day9::run,
     ];
 
     let run_single_day = |day_num: usize| {
