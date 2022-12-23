@@ -19,10 +19,10 @@ pub fn run(input: &str) -> String {
         .sum();
 
     let mut crt_image = String::new();
-    for row in 0..6 {
-        for col in 0..40 {
-            let sprite_pos = x_values_by_cycle[row * 40 + col];
-            let pixel = if (sprite_pos - col as i32).abs() <= 1 {
+    for y in 0..6 {
+        for x in 0..40 {
+            let sprite_x = x_values_by_cycle[y * 40 + x];
+            let pixel = if (sprite_x - x as i32).abs() <= 1 {
                 '#'
             } else {
                 ' '

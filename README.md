@@ -62,3 +62,7 @@ A nice grid-based puzzle. Learned about using `an_usize_val.wrapping_add_signed(
 ### Day 9: Rope Bridge
 
 A simple 2D movement puzzle. I really liked the generalization of the rope length needed for Part 2. Got an excuse to learn about and use `std::iter::repeat()` to flatten the step moves into a flat iterator :)
+
+### Day 10: Cathode-Ray Tube
+
+This one was a super fun one. Part 1 was quite easy, while part 2 had an unexpected "twist" of —spoiler alert!— reinterpreting the data of part 1 as an image.
