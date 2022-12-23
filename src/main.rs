@@ -1,30 +1,30 @@
 use std::{env, fs, process::ExitCode};
 
-mod day01;
-mod day02;
-mod day03;
-mod day04;
-mod day05;
-mod day06;
-mod day07;
-mod day07_tree;
-mod day08;
-mod day09;
-mod day10;
+mod day_01_calorie_counting;
+mod day_02_rock_paper_scissors;
+mod day_03_rucksack_reorganization;
+mod day_04_camp_cleanup;
+mod day_05_supply_stacks;
+mod day_06_tuning_trouble;
+mod day_07_no_space_left_on_device;
+mod day_07_no_space_left_on_device_with_tree;
+mod day_08_treetop_tree_house;
+mod day_09_rope_bridge;
+mod day_10_cathode_ray_tube;
 
 fn main() -> ExitCode {
     let args: Vec<_> = env::args().collect();
     let days = [
-        day01::run,
-        day02::run,
-        day03::run,
-        day04::run,
-        day05::run,
-        day06::run,
-        day07::run,
-        day08::run,
-        day09::run,
-        day10::run,
+        day_01_calorie_counting::run,
+        day_02_rock_paper_scissors::run,
+        day_03_rucksack_reorganization::run,
+        day_04_camp_cleanup::run,
+        day_05_supply_stacks::run,
+        day_06_tuning_trouble::run,
+        day_07_no_space_left_on_device::run,
+        day_08_treetop_tree_house::run,
+        day_09_rope_bridge::run,
+        day_10_cathode_ray_tube::run,
     ];
 
     let run_single_day = |day_num: usize| {
