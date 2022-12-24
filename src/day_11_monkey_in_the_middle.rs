@@ -1,30 +1,28 @@
 use std::collections::VecDeque;
 
 pub fn run(input: &str) -> String {
+    format!(
+        "{} {}",
+        run_monkey_in_the_middle_rounds(input, 20, true),
+        run_monkey_in_the_middle_rounds(input, 10_000, false)
+    )
+}
+
+fn run_monkey_in_the_middle_rounds(
+    input: &str,
+    rounds_count: usize,
+    relief_after_inspection: bool,
+) -> u64 {
     let mut monkeys: Vec<_> = input.split("\n\n").map(parse_monkey).collect();
-
-    for _ in 0..20 {
-        for monkey_index in 0..monkeys.len() {
-            while let Some(throw) = monkeys[monkey_index].inspect_and_throw_item() {
-                let (item, receiver_monkey_index) = throw;
-                monkeys[receiver_monkey_index].items.push_back(item);
-            }
-        }
-    }
-
-    let mut inspection_counts: Vec<_> = monkeys.iter().map(|m| m.inspections_count).collect();
-    inspection_counts.sort();
-    let monkey_business_part_1: u64 = inspection_counts[inspection_counts.len() - 2..]
-        .iter()
-        .product();
-
-    let mut monkeys: Vec<_> = input.split("\n\n").map(parse_monkey).collect();
+    // Trick: keep track of the product of all divisibility tests' divisors so
+    // that each time the worry level for an item is increased we can mod that
+    // number with this and keep it from ballooning out of control.
     let divisors_product: u64 = monkeys.iter().map(|m| m.div_test_divisor).product();
 
-    for _ in 0..10_000 {
+    for _ in 0..rounds_count {
         for monkey_index in 0..monkeys.len() {
-            while let Some(throw) =
-                monkeys[monkey_index].inspect_and_throw_item_part_2(divisors_product)
+            while let Some(throw) = monkeys[monkey_index]
+                .inspect_and_throw_item(divisors_product, relief_after_inspection)
             {
                 let (item, receiver_monkey_index) = throw;
                 monkeys[receiver_monkey_index].items.push_back(item);
@@ -34,11 +32,11 @@ pub fn run(input: &str) -> String {
 
     let mut inspection_counts: Vec<_> = monkeys.iter().map(|m| m.inspections_count).collect();
     inspection_counts.sort();
-    let monkey_business_part_2: u64 = inspection_counts[inspection_counts.len() - 2..]
+    let monkey_business: u64 = inspection_counts[inspection_counts.len() - 2..]
         .iter()
         .product();
 
-    format!("{monkey_business_part_1} {monkey_business_part_2}")
+    monkey_business
 }
 
 struct Monkey {
@@ -49,28 +47,21 @@ struct Monkey {
     if_false_receiver: usize,
     inspections_count: u64,
 }
-impl Monkey {
-    fn inspect_and_throw_item(&mut self) -> Option<(u64, usize)> {
-        let Some(item) = self.items.pop_front() else {
-            return None
-        };
-        self.inspections_count += 1;
-        let mut new_worry_level = (self.operation)(item);
-        new_worry_level /= 3;
-        let receiver = if new_worry_level % self.div_test_divisor == 0 {
-            self.if_true_receiver
-        } else {
-            self.if_false_receiver
-        };
-        Some((new_worry_level, receiver))
-    }
 
-    fn inspect_and_throw_item_part_2(&mut self, mod_divisor: u64) -> Option<(u64, usize)> {
+impl Monkey {
+    fn inspect_and_throw_item(
+        &mut self,
+        mod_divisor: u64,
+        relief_after_inspection: bool,
+    ) -> Option<(u64, usize)> {
         let Some(item) = self.items.pop_front() else {
             return None
         };
         self.inspections_count += 1;
-        let new_worry_level = (self.operation)(item) % mod_divisor;
+        let mut new_worry_level = (self.operation)(item) % mod_divisor;
+        if relief_after_inspection {
+            new_worry_level /= 3
+        };
         let receiver = if new_worry_level % self.div_test_divisor == 0 {
             self.if_true_receiver
         } else {
