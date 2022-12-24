@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 pub fn run(input: &str) -> String {
     format!(
@@ -72,16 +72,18 @@ impl Monkey {
 }
 
 fn parse_monkey(input: &str) -> Monkey {
-    let lines_data: Vec<_> = input
+    let data: HashMap<_, _> = input
         .lines()
         .skip(1)
-        .map(|line| line.split_once(": ").expect("line should have a colon").1)
+        .map(|line| line.trim_start().split_once(": ").expect("invalid line"))
         .collect();
-    let items: VecDeque<u64> = lines_data[0]
+
+    let items: VecDeque<u64> = data["Starting items"]
         .split(", ")
         .map(|s| s.parse().expect("item should be a valid number"))
         .collect();
-    let operation_words: Vec<_> = lines_data[1].split(' ').collect();
+
+    let operation_words: Vec<_> = data["Operation"].split(' ').collect();
     let operation: Box<dyn Fn(u64) -> u64> = match operation_words[..] {
         ["new", "=", "old", "+", "old"] => Box::new(|old: u64| old + old),
         ["new", "=", "old", "+", rhs] => {
@@ -93,26 +95,12 @@ fn parse_monkey(input: &str) -> Monkey {
             let rhs: u64 = rhs.parse().unwrap();
             Box::new(move |old: u64| old * rhs)
         }
-        _ => unreachable!("invalid operation {}", lines_data[1]),
+        _ => unreachable!("invalid operation {}", data["Operation"]),
     };
-    let div_test_divisor: u64 = lines_data[2]
-        .split(' ')
-        .last()
-        .unwrap()
-        .parse()
-        .expect("invalid number");
-    let if_true_receiver: usize = lines_data[3]
-        .split(' ')
-        .last()
-        .unwrap()
-        .parse()
-        .expect("invalid number");
-    let if_false_receiver: usize = lines_data[4]
-        .split(' ')
-        .last()
-        .unwrap()
-        .parse()
-        .expect("invalid number");
+
+    let div_test_divisor = parse_last_number(data["Test"]) as u64;
+    let if_true_receiver = parse_last_number(data["If true"]);
+    let if_false_receiver = parse_last_number(data["If false"]);
 
     Monkey {
         items,
@@ -122,4 +110,12 @@ fn parse_monkey(input: &str) -> Monkey {
         if_false_receiver,
         inspections_count: 0,
     }
+}
+
+fn parse_last_number(s: &str) -> usize {
+    s.split(' ')
+        .last()
+        .unwrap()
+        .parse()
+        .expect("invalid number")
 }
