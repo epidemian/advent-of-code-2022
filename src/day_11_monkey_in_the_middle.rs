@@ -53,37 +53,18 @@ struct Operation {
     rhs: Operand,
     operator: Operator,
 }
+
 enum Operand {
     Old,
     Num(u64),
 }
+
 enum Operator {
     Add,
     Mult,
 }
 
 impl Monkey {
-    fn inspect_and_throw_item(
-        &mut self,
-        mod_divisor: u64,
-        relief_after_inspection: bool,
-    ) -> Option<(u64, usize)> {
-        let Some(item) = self.items.pop_front() else {
-            return None
-        };
-        self.inspections_count += 1;
-        let mut new_worry_level = self.operation.call(item) % mod_divisor;
-        if relief_after_inspection {
-            new_worry_level /= 3
-        };
-        let receiver = if new_worry_level % self.div_test_divisor == 0 {
-            self.if_true_receiver
-        } else {
-            self.if_false_receiver
-        };
-        Some((new_worry_level, receiver))
-    }
-
     fn parse(input: &str) -> Monkey {
         let data: HashMap<_, _> = input
             .lines()
@@ -114,6 +95,27 @@ impl Monkey {
             if_false_receiver,
             inspections_count: 0,
         }
+    }
+
+    fn inspect_and_throw_item(
+        &mut self,
+        mod_divisor: u64,
+        relief_after_inspection: bool,
+    ) -> Option<(u64, usize)> {
+        let Some(item) = self.items.pop_front() else {
+            return None
+        };
+        self.inspections_count += 1;
+        let mut new_worry_level = self.operation.call(item) % mod_divisor;
+        if relief_after_inspection {
+            new_worry_level /= 3
+        };
+        let receiver = if new_worry_level % self.div_test_divisor == 0 {
+            self.if_true_receiver
+        } else {
+            self.if_false_receiver
+        };
+        Some((new_worry_level, receiver))
     }
 }
 
@@ -171,7 +173,7 @@ impl Operator {
 fn parse_last_number(s: &str) -> usize {
     s.split(' ')
         .last()
-        .unwrap()
+        .expect("string should have at least one word")
         .parse()
         .expect("invalid number")
 }
