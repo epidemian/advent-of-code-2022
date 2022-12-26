@@ -69,4 +69,6 @@ This one was a super fun one. Part 1 was quite easy, while part 2 had an unexpec
 
 ### Day 11: Monkey in the Middle
 
-This one involved tedious amounts of parsing. After that, the simulation for the first part was straightforward, and then the second part involved a neat modular math trick. I'm quite satisfied with the end result, where some OO-ish delegation was used to spread the parsing logic into smaller chunks instead of a giant mess of `unwrap()`/`expect(..)`-riddled single function.
+This one involved tedious amounts of parsing. After that, the simulation for the first part was straightforward, and then the second part involved a neat modular math trick.
+
+I'm quite satisfied with the end result, where some OO-ish delegation was used to spread the parsing logic into smaller chunks instead of a giant mess of `unwrap()`/`expect(..)`-riddled single function. And also, this puzzle turned out to be a great excuse to nerd it out on data structures, with valid uses of `VecDeque`, `HashMap` and even `BinaryHeap`! 🤓

@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{BinaryHeap, HashMap, VecDeque};
 
 pub fn run(input: &str) -> String {
     format!(
@@ -30,11 +30,9 @@ fn run_monkey_in_the_middle_rounds(
         }
     }
 
-    let mut inspection_counts: Vec<_> = monkeys.iter().map(|m| m.inspections_count).collect();
-    inspection_counts.sort();
-    let monkey_business: u64 = inspection_counts[inspection_counts.len() - 2..]
-        .iter()
-        .product();
+    let inspection_counts: BinaryHeap<_> = monkeys.iter().map(|m| m.inspections_count).collect();
+    // BinaryHeap is max-sorted so the first two values are the biggest.
+    let monkey_business: u64 = inspection_counts.iter().take(2).product();
 
     monkey_business
 }
