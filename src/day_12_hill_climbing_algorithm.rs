@@ -24,37 +24,31 @@ pub fn run(input: &str) -> String {
 type Point = (usize, usize);
 
 fn parse_input(input: &str) -> (Vec<Vec<u8>>, Point, Point) {
-    let mut start = None;
-    let mut end = None;
-    let heightmap: Vec<Vec<u8>> = input
-        .lines()
-        .enumerate()
-        .map(|(y, line)| {
-            line.as_bytes()
-                .iter()
-                .enumerate()
-                .map(|(x, ch)| match ch {
-                    b'S' => {
-                        // Hack: sneakily mutate some outer variables inside a map().
-                        start = Some((x, y));
-                        0
-                    }
-                    b'E' => {
-                        end = Some((x, y));
-                        25
-                    }
-                    b'a'..=b'z' => ch - b'a',
-                    _ => unreachable!("invalid character '{}'", *ch as char),
-                })
-                .collect()
-        })
-        .collect();
+    let char_map: Vec<_> = input.lines().map(|l| l.as_bytes().to_vec()).collect();
+    let height = char_map.len();
+    let width = char_map[0].len();
 
-    (
-        heightmap,
-        start.expect("heightmap should have a start position"),
-        end.expect("heightmap should have an end position"),
-    )
+    let start = map_points_iter(width, height)
+        .find(|&(x, y)| char_map[y][x] == b'S')
+        .expect("start position not found");
+    let end = map_points_iter(width, height)
+        .find(|&(x, y)| char_map[y][x] == b'E')
+        .expect("end position not found");
+
+    let mut heightmap = vec![vec![0; width]; height];
+    for (x, y) in map_points_iter(width, height) {
+        heightmap[y][x] = match char_map[y][x] {
+            b'S' => 0,
+            b'E' => 25,
+            ch => ch - b'a',
+        };
+    }
+
+    (heightmap, start, end)
+}
+
+fn map_points_iter(width: usize, height: usize) -> impl Iterator<Item = Point> {
+    (0..height).flat_map(move |y| (0..width).map(move |x| (x, y)))
 }
 
 fn shortest_path(heightmap: &Vec<Vec<u8>>, start: &Point, end: &Point) -> Option<usize> {
