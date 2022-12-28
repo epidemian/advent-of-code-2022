@@ -72,3 +72,9 @@ This one was a super fun one. Part 1 was quite easy, while part 2 had an unexpec
 This one involved tedious amounts of parsing. After that, the simulation for the first part was straightforward, and then the second part involved a neat modular math trick.
 
 I'm quite satisfied with the end result, where some OO-ish delegation was used to spread the parsing logic into smaller chunks instead of a giant mess of `unwrap()`/`expect(..)`-riddled single function. And also, this puzzle turned out to be a great excuse to nerd it out on data structures, with valid uses of `VecDeque`, `HashMap` and even `BinaryHeap`! 🤓
+
+### Day 12: Hill Climbing Algorithm
+
+A deceptive title for a path-finding problem. I initially reused (i.e., copy-pasted) a Dijkstra's algorithm implementation [from my last-year's AoC solution](https://github.com/epidemian/advent-of-code-2021/blob/main/src/dijkstra.rs), which worked alright, but needed to brute-force the solution to part 2 by computing the shortest path from any starting point of height 0 (around 600 points on the given input) to the end point.
+
+This brute-forcing meant a subpar runtime performance and a noticeable delay when running in debug mode (~1.6 seconds). After some reading and time spent on a chin-grabbing thinking pose, i could adapt that algorithm to compute all distances to the end point in one go and use those computed distances for both part 1 and 2. This improved performance significantly, reducing the runtime for this puzzle to around the same ballpark of any of the previous ones :)

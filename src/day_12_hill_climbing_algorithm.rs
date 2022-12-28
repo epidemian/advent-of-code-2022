@@ -24,15 +24,15 @@ pub fn run(input: &str) -> String {
         dijkstra::shortest_path_distances(&end, neighbors)
     };
 
-    let shortest_path_from_start = distances[&start];
-    let shortest_path_from_any_bottommost_point = distances
+    let shortest_dist_from_start = distances[&start];
+    let shortest_dist_from_any_bottommost_point = distances
         .iter()
         .filter(|((x, y), _dist)| heightmap[*y][*x] == 0)
         .map(|(_point, dist)| dist)
         .min()
         .expect("there should be a point at height 0 that reaches the end");
 
-    format!("{shortest_path_from_start} {shortest_path_from_any_bottommost_point}")
+    format!("{shortest_dist_from_start} {shortest_dist_from_any_bottommost_point}")
 }
 
 type Point = (usize, usize);
