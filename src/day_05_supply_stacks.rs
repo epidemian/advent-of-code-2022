@@ -17,8 +17,8 @@ pub fn run(input: &str) -> String {
     let mut stacks = initial_stacks.clone();
     for &Move(crate_count, from, to) in crane_moves.iter() {
         let bottom_crate_index = stacks[from].len() - crate_count;
-        let mut moved_crates: Vec<_> = stacks[from].drain(bottom_crate_index..).collect();
-        stacks[to].append(&mut moved_crates);
+        let moved_crates = stacks[from].split_off(bottom_crate_index);
+        stacks[to].extend(moved_crates);
     }
     let part_2_ans = get_top_crate_letters(&stacks);
 

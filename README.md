@@ -41,6 +41,8 @@ Some pretty involved parsing logic, but then the simulation of crane moves was s
 
 I did struggle trying to find an optimal way of doing the bulk moves of part 2, but in the end preferred to use a simple `Vec::drain().collect()` + `Vec::append()` combo to have the logic expressed in a straightforward way, although incurring in an unnecessary allocation for the temporary vector of moved crates. A "better" solution for that would have required to [split the mutable borrow](https://doc.rust-lang.org/nomicon/borrow-splitting.html) of the `stacks` vector, to have two different mutable borrows: one for the "source" crate stack, and another for the "destination" stack, such that elements from the source could be copied into the destination without worry for aliasing. but that seemed like too much hassle TBH.
 
+Update: learned about `Vec::split_off(ind)` and `Vec::extend()`, which are a bit more clear and expressive than `Vec::drain().collect()` and `Vec::append()` respectively, although in terms of performance they should be basically the same.
+
 ### Day 6: Tuning Trouble
 
 A much simpler puzzle that the previous one. Almost no parsing required, and the uniqueness check was straightforward to implement using a HashSet. There are surely optimization tricks that could be applied if we wanted to make this algorithm more optimal, like keeping track of the last N characters in a `HashMap<u8, usize>` and not having to recompute (and re-hash) the unique characters on each step.
