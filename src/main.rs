@@ -13,6 +13,7 @@ mod day_09_rope_bridge;
 mod day_10_cathode_ray_tube;
 mod day_11_monkey_in_the_middle;
 mod day_12_hill_climbing_algorithm;
+mod day_13_distress_signal;
 mod dijkstra;
 
 fn main() -> ExitCode {
@@ -30,6 +31,7 @@ fn main() -> ExitCode {
         day_10_cathode_ray_tube::run,
         day_11_monkey_in_the_middle::run,
         day_12_hill_climbing_algorithm::run,
+        day_13_distress_signal::run,
     ];
 
     let run_single_day = |day_num: usize| {
