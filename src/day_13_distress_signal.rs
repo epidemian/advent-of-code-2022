@@ -1,13 +1,11 @@
 use std::cmp::Ordering;
 
-use serde_json;
-
 pub fn run(input: &str) -> String {
     let pairs: Vec<(Value, Value)> = input
         .split("\n\n")
         .map(|s| {
             let (left, right) = s.split_once("\n").expect("expected a pair of values");
-            (parse_value(left), parse_value(right))
+            (parse_packet(left), parse_packet(right))
         })
         .collect();
 
@@ -18,7 +16,7 @@ pub fn run(input: &str) -> String {
         .map(|(index, _pair)| index + 1)
         .sum();
 
-    let divider_packets = [parse_value("[[2]]"), parse_value("[[6]]")];
+    let divider_packets = [parse_packet("[[2]]"), parse_packet("[[6]]")];
 
     let mut all_packets: Vec<_> = pairs
         .iter()
@@ -39,25 +37,46 @@ pub fn run(input: &str) -> String {
 
 #[derive(Eq, PartialEq)]
 enum Value {
-    Num(u64),
+    Num(u32),
     List(Vec<Value>),
 }
 use Value::*;
 
-fn parse_value(s: &str) -> Value {
-    // TODO: Remove serde_json dependency.
-    let json: serde_json::Value = serde_json::from_str(s).expect("expected a JSON value");
-    json_to_value(&json)
-}
-
-fn json_to_value(json: &serde_json::Value) -> Value {
-    match json {
-        serde_json::Value::Number(n) => Num(n.as_u64().unwrap()),
-        serde_json::Value::Array(json_values) => {
-            List(json_values.iter().map(json_to_value).collect())
+fn parse_packet(s: &str) -> Value {
+    let mut bytes = s.bytes().peekable();
+    let mut list_stack: Vec<Vec<Value>> = Vec::new();
+    while let Some(ch) = bytes.next() {
+        match ch {
+            b'[' => {
+                list_stack.push(Vec::new());
+            }
+            b']' => {
+                let Some(last_list) = list_stack.pop() else {
+                    panic!("unmatched ]")
+                };
+                let value = Value::List(last_list);
+                if let Some(parent_list) = list_stack.last_mut() {
+                    parent_list.push(value);
+                } else {
+                    // List is topmost list.
+                    return value;
+                }
+            }
+            b',' => {}
+            b'0'..=b'9' => {
+                let mut n = (ch - b'0') as u32;
+                while let Some(next_ch) = bytes.next_if(|ch| matches!(ch, b'0'..=b'9')) {
+                    n = n * 10 + (next_ch - b'0') as u32;
+                }
+                let Some(list) = list_stack.last_mut() else {
+                    panic!("number must appear inside a list")
+                };
+                list.push(Value::Num(n))
+            }
+            _ => panic!("unexpected character '{}'", ch as char),
         }
-        _ => unreachable!("unexpected JSON value {}", json),
     }
+    panic!("unclosed list")
 }
 
 impl Ord for Value {
