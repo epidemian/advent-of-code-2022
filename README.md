@@ -11,6 +11,7 @@ I recorded myself solving these puzzles to try to maintain focus and finish them
 - Fast execution time (< 1 second for whole set of puzzles)
 - Read inputs from files (or stdin); don't include their contents into the executable
 - (optional) Better error handling
+- (optional) Use vanilla Rust; no external dependencies
 
 ## Notes & Learnings
 
@@ -80,3 +81,9 @@ I'm quite satisfied with the end result, where some OO-ish delegation was used t
 A deceptive title for a path-finding problem. I initially reused (i.e., copy-pasted) a Dijkstra's algorithm implementation [from my last-year's AoC solution](https://github.com/epidemian/advent-of-code-2021/blob/main/src/dijkstra.rs), which worked alright, but needed to brute-force the solution to part 2 by computing the shortest path from any starting point of height 0 (around 600 points on the given input) to the end point.
 
 This brute-forcing meant a subpar runtime performance and a noticeable delay when running in debug mode (~1.6 seconds). After some reading and time spent on a chin-grabbing thinking pose, i could adapt that algorithm to compute all distances to the end point in one go and use those computed distances for both part 1 and 2. This improved performance significantly, reducing the runtime for this puzzle to around the same ballpark of any of the previous ones :)
+
+### Day 13: Distress Signal
+
+This one was a very nice excuse to implement a custom ordering logic through the Ord/PartialOrd traits. I also learned how to do slice patterns like those typical in functional programming using the `@` operator to capture a part of a pattern: `let [head, tail @ ..] = a_slice else { handle_empty_case() }`.
+
+Initially, i used [`serde_json`](https://docs.rs/serde_json/latest/serde_json/) to quickly parse the inputs as JSON arrays, but then i implemented a custom ad-hoc parser in the form of a very basic loop to avoid the need for an external dependency.

@@ -25,14 +25,14 @@ pub fn run(input: &str) -> String {
         .collect();
     all_packets.sort();
 
-    let divider_packets_indices_product: usize = all_packets
+    let decoder_key: usize = all_packets
         .iter()
         .enumerate()
         .filter(|(_index, value)| divider_packets.contains(value))
         .map(|(index, _value)| index + 1)
         .product();
 
-    format!("{ordered_pairs_indices_sum} {divider_packets_indices_product}")
+    format!("{ordered_pairs_indices_sum} {decoder_key}")
 }
 
 #[derive(Eq, PartialEq)]
