@@ -1,3 +1,5 @@
+use std::{env, thread, time};
+
 pub fn run(input: &str) -> String {
     let mut map = parse_map(input);
 
@@ -38,6 +40,7 @@ fn drop_sand_grain(map: &mut Map) -> bool {
 
         let Some((next_x, next_y)) = empty_tile else {
             map[y][x] = Sand;
+            print_map_frame(&map);
             return true;
         };
         x = next_x;
@@ -105,4 +108,31 @@ fn parse_point(s: &str) -> Point {
 
 fn path_segments(path: &[Point]) -> impl Iterator<Item = (Point, Point)> + '_ {
     path.windows(2).map(|w| (w[0], w[1]))
+}
+
+fn print_map_frame(map: &Map) {
+    if env::var("ANIMATE").is_err() {
+        return;
+    };
+
+    let use_color = env::var("NO_COLOR").is_err();
+    let mut rock_str = "#";
+    let mut sand_str = "o";
+    if use_color {
+        rock_str = "\x1B[1;35;45m#\x1B[0m";
+        sand_str = "\x1B[1;33mo\x1B[0m";
+    }
+
+    let min_x = SAND_POUR_X - map.len();
+    let mut output = String::new();
+    for row in map {
+        output.extend(row[min_x..].iter().map(|tile| match tile {
+            Air => " ",
+            Rock => rock_str,
+            Sand => sand_str,
+        }));
+        output.push('\n')
+    }
+    print!("\x1B[2J{output}");
+    thread::sleep(time::Duration::from_millis(20));
 }

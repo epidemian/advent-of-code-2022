@@ -90,4 +90,4 @@ Initially, i used [`serde_json`](https://docs.rs/serde_json/latest/serde_json/) 
 
 ### Day 14: Regolith Reservoir
 
-Nice sand-falling simulation. Went for a straightforward imperative solution and also enjoyed playing around with [animating the falling sand](https://youtu.be/1-3rK491974) in the terminal.
+Nice sand-falling simulation. Went for a straightforward imperative solution. Also enjoyed playing around with [animating the falling sand](https://youtu.be/1-3rK491974) in the terminal. To enable this animation, set the `ANIMATE` environment var: `ANIMATE=1 cargo run 14`.
