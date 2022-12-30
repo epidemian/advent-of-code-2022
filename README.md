@@ -87,3 +87,7 @@ This brute-forcing meant a subpar runtime performance and a noticeable delay whe
 This one was a very nice excuse to implement a custom ordering logic through the Ord/PartialOrd traits. I also learned how to do slice patterns like those typical in functional programming using the `@` operator to capture a part of a pattern: `let [head, tail @ ..] = a_slice else { handle_empty_case() }`.
 
 Initially, i used [`serde_json`](https://docs.rs/serde_json/latest/serde_json/) to quickly parse the inputs as JSON arrays, but then i implemented a custom ad-hoc parser in the form of a very basic loop to avoid the need for an external dependency.
+
+### Day 14: Regolith Reservoir
+
+Nice sand-falling simulation. Went for a straightforward imperative solution and also enjoyed playing around with [animating the falling sand](https://youtu.be/1-3rK491974) in the terminal.
