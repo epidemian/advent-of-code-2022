@@ -8,8 +8,9 @@ pub fn run(input: &str) -> String {
     let part_1_count = sand_grains_count;
 
     // Add floor to map.
-    map.push(vec![Air; 1000]);
-    map.push(vec![Rock; 1000]);
+    let width = map[0].len();
+    map.push(vec![Air; width]);
+    map.push(vec![Rock; width]);
 
     while drop_sand_grain(&mut map) {
         sand_grains_count += 1;
@@ -18,8 +19,10 @@ pub fn run(input: &str) -> String {
     format!("{part_1_count} {sand_grains_count}")
 }
 
+const SAND_POUR_X: usize = 500;
+
 fn drop_sand_grain(map: &mut Map) -> bool {
-    let (mut x, mut y) = (500, 0);
+    let (mut x, mut y) = (SAND_POUR_X, 0);
     if !matches!(map[y][x], Air) {
         // Start position already occupied, cannot drop more sand.
         return false;
@@ -61,9 +64,13 @@ fn parse_map(input: &str) -> Map {
         .flat_map(|path| path.iter())
         .map(|(_x, y)| y)
         .max()
-        .expect("there should be at least one path");
+        .expect("there should at least one point");
 
-    let mut map = vec![vec![Air; 1000]; max_y + 1];
+    let height = max_y + 1;
+    // Sand cannot spread more that the map height to the right. The +2 is to
+    // consider the floor added on part 2.
+    let width = SAND_POUR_X + height + 2;
+    let mut map = vec![vec![Air; width]; height];
     for path in paths {
         for ((x1, y1), (x2, y2)) in path_segments(&path) {
             if x1 == x2 {
