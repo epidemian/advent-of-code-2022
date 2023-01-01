@@ -4,29 +4,16 @@ pub fn run(input: &str) -> String {
         .expect("input should have two sections separated by double newlines");
     let initial_stacks = parse_stacks(initial_stacks_section);
     let crane_moves = parse_moves(crane_moves_section);
-
-    let mut stacks = initial_stacks.clone();
-    for &Move(crate_count, from, to) in crane_moves.iter() {
-        for _ in 0..crate_count {
-            let top_crate = stacks[from].pop().expect("stack should have a crate");
-            stacks[to].push(top_crate);
-        }
-    }
-    let part_1_ans = get_top_crate_letters(&stacks);
-
-    let mut stacks = initial_stacks;
-    for &Move(crate_count, from, to) in crane_moves.iter() {
-        let bottom_crate_index = stacks[from].len() - crate_count;
-        let moved_crates = stacks[from].split_off(bottom_crate_index);
-        stacks[to].extend(moved_crates);
-    }
-    let part_2_ans = get_top_crate_letters(&stacks);
-
-    format!("{part_1_ans} {part_2_ans}")
+    format!(
+        "{} {}",
+        exec_moves(&initial_stacks, &crane_moves, move_as_crate_mover_9000),
+        exec_moves(&initial_stacks, &crane_moves, move_as_crate_mover_9001)
+    )
 }
 
 type Stack = Vec<char>;
 struct Move(usize, usize, usize);
+type MoveFn = fn(&Move, &mut [Stack]) -> ();
 
 fn parse_stacks(input: &str) -> Vec<Stack> {
     // Collect stacks in reverse order and ignore last line with stack names.
@@ -60,6 +47,27 @@ fn parse_move(line: &str) -> Move {
         panic!("invalid line {line}")
     };
     Move(crate_count, from - 1, to - 1)
+}
+
+fn exec_moves(initial_stacks: &[Stack], crane_moves: &[Move], move_fn: MoveFn) -> String {
+    let mut stacks = initial_stacks.to_vec();
+    for crane_move in crane_moves.iter() {
+        move_fn(crane_move, &mut stacks)
+    }
+    get_top_crate_letters(&stacks)
+}
+
+fn move_as_crate_mover_9000(&Move(crate_count, from, to): &Move, stacks: &mut [Stack]) {
+    for _ in 0..crate_count {
+        let top_crate = stacks[from].pop().expect("stack should have a crate");
+        stacks[to].push(top_crate);
+    }
+}
+
+fn move_as_crate_mover_9001(&Move(crate_count, from, to): &Move, stacks: &mut [Stack]) {
+    let bottom_crate_index = stacks[from].len() - crate_count;
+    let moved_crates = stacks[from].split_off(bottom_crate_index);
+    stacks[to].extend(moved_crates);
 }
 
 fn get_top_crate_letters(stacks: &[Stack]) -> String {
