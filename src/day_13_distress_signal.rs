@@ -4,7 +4,7 @@ pub fn run(input: &str) -> String {
     let pairs: Vec<(Value, Value)> = input
         .split("\n\n")
         .map(|s| {
-            let (left, right) = s.split_once("\n").expect("expected a pair of values");
+            let (left, right) = s.split_once('\n').expect("expected a pair of values");
             (parse_packet(left), parse_packet(right))
         })
         .collect();
@@ -83,9 +83,9 @@ impl Ord for Value {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
             (Num(l_num), Num(r_num)) => l_num.cmp(r_num),
-            (List(l_values), List(r_values)) => cmp_lists(&l_values, &r_values),
-            (Num(l_num), List(r_values)) => cmp_lists(&[Num(*l_num)], &r_values),
-            (List(l_values), Num(r_num)) => cmp_lists(&l_values, &[Num(*r_num)]),
+            (List(l_values), List(r_values)) => cmp_lists(l_values, r_values),
+            (Num(l_num), List(r_values)) => cmp_lists(&[Num(*l_num)], r_values),
+            (List(l_values), Num(r_num)) => cmp_lists(l_values, &[Num(*r_num)]),
         }
     }
 }

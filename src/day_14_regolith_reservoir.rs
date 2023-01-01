@@ -40,7 +40,7 @@ fn drop_sand_grain(map: &mut Map) -> bool {
 
         let Some((next_x, next_y)) = empty_tile else {
             map[y][x] = Sand;
-            print_map_frame(&map);
+            print_map_frame(map);
             return true;
         };
         x = next_x;
@@ -76,15 +76,13 @@ fn parse_map(input: &str) -> Map {
     let mut map = vec![vec![Air; width]; height];
     for path in paths {
         for ((x1, y1), (x2, y2)) in path_segments(&path) {
-            if x1 == x2 {
-                // Vertical line.
-                for y in y1.min(y2)..=y1.max(y2) {
-                    map[y][x1] = Rock;
-                }
-            } else if y1 == y2 {
+            if y1 == y2 {
                 // Horizontal line.
-                for x in x1.min(x2)..=x1.max(x2) {
-                    map[y1][x] = Rock;
+                map[y1][x1.min(x2)..=x1.max(x2)].fill(Rock);
+            } else if x1 == x2 {
+                // Vertical line.
+                for row in map[y1.min(y2)..=y1.max(y2)].iter_mut() {
+                    row[x1] = Rock;
                 }
             } else {
                 panic!("path segment should be either horizontal or vertical")

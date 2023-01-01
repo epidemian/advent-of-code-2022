@@ -14,7 +14,7 @@ pub fn run(input: &str) -> String {
     }
     let part_1_ans = get_top_crate_letters(&stacks);
 
-    let mut stacks = initial_stacks.clone();
+    let mut stacks = initial_stacks;
     for &Move(crate_count, from, to) in crane_moves.iter() {
         let bottom_crate_index = stacks[from].len() - crate_count;
         let moved_crates = stacks[from].split_off(bottom_crate_index);
