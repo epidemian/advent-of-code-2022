@@ -15,6 +15,7 @@ mod day_11_monkey_in_the_middle;
 mod day_12_hill_climbing_algorithm;
 mod day_13_distress_signal;
 mod day_14_regolith_reservoir;
+mod day_15_beacon_exclusion_zone;
 mod dijkstra;
 
 fn main() -> ExitCode {
@@ -34,6 +35,7 @@ fn main() -> ExitCode {
         day_12_hill_climbing_algorithm::run,
         day_13_distress_signal::run,
         day_14_regolith_reservoir::run,
+        day_15_beacon_exclusion_zone::run,
     ];
 
     let run_single_day = |day_num: usize| {
