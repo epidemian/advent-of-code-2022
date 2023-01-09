@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 
 pub fn run(input: &str) -> String {
-    let sensors = parse_sensors(input);
+    let mut sensors = parse_sensors(input);
+    sensors.sort_by_key(|s| s.position.0);
 
     let excluded_positions_count = excluded_positions_count_at_row(&sensors, 2_000_000);
 
@@ -32,71 +33,64 @@ fn parse_sensor(line: &str) -> Sensor {
     let [sx, sy, bx, by] = numbers[..] else {
         panic!("invalid line '{line}', should have 4 numbers")
     };
-    let beacon_distance = distance((sx, sy), (bx, by));
 
     Sensor {
         position: (sx, sy),
         beacon_position: (bx, by),
-        beacon_distance,
+        beacon_distance: (sx - bx).abs() + (sy - by).abs(),
     }
 }
 
 fn excluded_positions_count_at_row(sensors: &[Sensor], y: i64) -> i64 {
-    let segments = sensors_exclusion_row_segments(sensors, y);
+    // A beacon can be detected by multiple sensors. Avoid double counting.
+    let beacon_positions = sensors.iter().map(|s| s.beacon_position);
+    let row_beacons: HashSet<_> = beacon_positions.filter(|(_bx, by)| *by == y).collect();
 
-    // A beacon can be detected by multiple sensors. We want unique positions.
-    let beacon_positions: HashSet<_> = sensors.iter().map(|s| s.beacon_position).collect();
-    let beacons_at_row_y_count = beacon_positions.iter().filter(|(_bx, by)| *by == y).count();
+    let segments = get_contiguous_exclusion_row_segments(sensors, y);
+    let [(start, end)] = segments[..] else {
+        panic!("expected only one exclusion segment at y={y}")
+    };
 
-    let max_end = segments.iter().map(|(_start, end)| end).max().unwrap();
-    let min_start = segments.iter().map(|(start, _end)| start).min().unwrap();
-
-    // Note: assumes no "holes" in this row.
-    max_end - min_start + 1 - beacons_at_row_y_count as i64
+    end - start + 1 - row_beacons.len() as i64
 }
 
 fn find_distress_signal_beacon(sensors: &[Sensor]) -> Option<Point> {
     let size = 4_000_000;
     for y in 0..=size {
-        let segments = sensors_exclusion_row_segments(sensors, y);
-        let mut x = 0;
-        for (start_x, end_x) in segments {
-            if start_x == x + 2 {
-                // There is a gap of just one position between this exclusion
-                // segment and the previous one. Beacon found!
-                return Some((x + 1, y));
-            }
-            x = x.max(end_x);
-            if x >= size {
-                break;
-            }
+        let segments = get_contiguous_exclusion_row_segments(sensors, y);
+        let &(_start_x, end_x) = segments.first().expect("at least one segment expected");
+
+        if end_x < size {
+            return Some((end_x + 1, y));
         }
     }
     None
 }
 
-fn sensors_exclusion_row_segments(sensors: &[Sensor], y: i64) -> Vec<(i64, i64)> {
-    let mut segments: Vec<_> = sensors
-        .iter()
-        .filter_map(|sensor| {
-            let &Sensor {
-                beacon_distance,
-                position: (sx, sy),
-                ..
-            } = sensor;
-            let d = (y - sy).abs();
-            if d > beacon_distance {
-                return None;
-            }
-            let start_x = sx - (beacon_distance - d);
-            let end_x = sx + (beacon_distance - d);
-            Some((start_x, end_x))
-        })
-        .collect();
-    segments.sort_by_key(|(start_x, _end_x)| *start_x);
-    segments
-}
+// Assumes sensors are sorted by x coordinate.
+fn get_contiguous_exclusion_row_segments(sensors: &[Sensor], y: i64) -> Vec<(i64, i64)> {
+    let mut segments = vec![];
+    for sensor in sensors {
+        let (sx, sy) = sensor.position;
+        let d = sensor.beacon_distance - (y - sy).abs();
+        if d < 0 {
+            continue;
+        }
+        let mut start = sx - d;
+        let mut end = sx + d;
 
-fn distance((x1, y1): Point, (x2, y2): Point) -> i64 {
-    (x1 - x2).abs() + (y1 - y2).abs()
+        while let Some(&(last_start, last_end)) = segments.last() {
+            if start > last_end || end < last_start {
+                // Doesn't overlap with last segment.
+                break;
+            }
+            // Overlaps. Extend this one and discard last one.
+            start = start.min(last_start);
+            end = end.max(last_end);
+            segments.pop();
+        }
+
+        segments.push((start, end))
+    }
+    segments
 }
