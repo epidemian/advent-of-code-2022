@@ -91,3 +91,9 @@ Initially, i used [`serde_json`](https://docs.rs/serde_json/latest/serde_json/) 
 ### Day 14: Regolith Reservoir
 
 Nice sand-falling simulation. Went for a straightforward imperative solution. Also enjoyed playing around with [animating the falling sand](https://youtu.be/1-3rK491974) in the terminal. To enable this animation, set the `ANIMATE` environment var: `ANIMATE=1 cargo run 14`.
+
+### Day 15: Beacon Exclusion Zone
+
+Interesting big-numbers crunching problem. For part 1 i could get away with a very brute-force solution of checking every position along the given line. But for part 2 i needed to come up with a more clever approach, which was pretty difficult TBH.
+
+My current solution is still a little brute-forcey —just that instead of checking all positions across a line, i'm checking all lines across the 4M needed range—but at least it runs in a reasonable time (~200ms). Still, i think a much more direct solution is possible if we could model the intersection of the 2D beacon exclusion zones better.
