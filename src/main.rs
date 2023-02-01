@@ -1,4 +1,4 @@
-use std::{env, fs, process::ExitCode};
+use std::{env, fs, process::ExitCode, time};
 
 mod day_01_calorie_counting;
 mod day_02_rock_paper_scissors;
@@ -41,11 +41,13 @@ fn main() -> ExitCode {
     ];
 
     let run_single_day = |day_num: usize| {
+        let instant = time::Instant::now();
         let filename = format!("inputs/day{:02}.txt", day_num);
         match fs::read_to_string(&filename) {
             Ok(input) => {
                 let output = days[day_num - 1](&input);
-                println!("Day {day_num}: {output}");
+                let time_annotation = format_time_annotation(instant.elapsed());
+                println!("Day {day_num}{time_annotation}: {output}");
                 Ok(())
             }
             Err(err) => {
@@ -84,4 +86,12 @@ fn main() -> ExitCode {
     }
 
     ExitCode::SUCCESS
+}
+
+fn format_time_annotation(elapsed: time::Duration) -> String {
+    if elapsed.as_millis() < 1 {
+        "".to_string()
+    } else {
+        format!(" ({elapsed:.0?})")
+    }
 }
