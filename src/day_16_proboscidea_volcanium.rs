@@ -1,146 +1,109 @@
 use crate::dijkstra::shortest_path_distances;
 use std::collections::HashMap;
 
+// Note: this solution was ~stolen from~ heavily inspired by
+// https://old.reddit.com/r/adventofcode/comments/zn6k1l/2022_day_16_solutions/j2xhog7/
 pub fn run(input: &str) -> String {
     let graph = parse_graph(input);
     let distances: HashMap<_, _> = graph
-        .iter()
-        // .filter(|(_id, valve)| valve.flow_rate > 0)
-        .map(|(id, _valve)| {
-            let dists =
+        .keys()
+        .map(|id| {
+            let mut dists =
                 shortest_path_distances(id, |id| graph[id].connected_valves.iter().cloned());
-            let dists: HashMap<_, _> = dists
-                .into_iter()
-                .filter(|(other_id, _dist)| other_id != id && graph[other_id].flow_rate > 0)
-                .collect();
+            dists.retain(|other_id, _dist| other_id != id && graph[other_id].flow_rate > 0);
             (*id, dists)
         })
         .collect();
 
-    let mut remaining_minutes: u64 = 30;
-    let mut current_valve = "AA";
-    let mut open_valves = vec![];
-    let mut total_pressure_released = 0;
-    loop {
-        let next_valve = pick_next_valve(
-            &distances,
-            current_valve,
-            &open_valves,
-            remaining_minutes,
-            &graph,
-        );
-        let Some(next_valve_id) = next_valve else {
-            break
-        };
-        let next_valve_dist = distances[current_valve][next_valve_id];
-        println!("next valve {next_valve_id} (distance={next_valve_dist}), remaining minutes {remaining_minutes}");
-        current_valve = next_valve_id;
-        remaining_minutes -= next_valve_dist as u64 + 1;
-        open_valves.push(next_valve_id);
-        total_pressure_released += remaining_minutes * graph[next_valve_id].flow_rate;
-        if remaining_minutes <= 0 {
-            break;
-        }
-    }
-
-    format!("{total_pressure_released}")
-}
-
-const PLAN_AHEAD_MINUTES: i32 = 10;
-
-fn pick_next_valve<'a>(
-    distances: &'a HashMap<&str, HashMap<&str, usize>>,
-    starting_valve: &str,
-    open_valves: &Vec<&str>,
-    remaining_minutes: u64,
-    graph: &HashMap<&str, Valve>,
-) -> Option<&'a str> {
-    let possible_paths = get_all_possible_paths(
-        graph,
-        distances,
-        starting_valve,
-        open_valves,
-        remaining_minutes.min(PLAN_AHEAD_MINUTES as u64) as i32,
-    );
-    // println!(
-    //     "possible paths starting at {starting_valve} {:#?}",
-    //     possible_paths
-    // );
-
-    let best_path = possible_paths.iter().max_by_key(|path| {
-        let mut released_pressure = 0;
-        let mut current_valve = starting_valve;
-        let mut remaining_minutes = remaining_minutes.min(PLAN_AHEAD_MINUTES as u64);
-        for valve_id in path.iter() {
-            let dist = distances[current_valve][valve_id];
-            if dist as u64 + 1 > remaining_minutes {
-                return 0;
-            }
-            remaining_minutes -= dist as u64 + 1;
-            released_pressure += remaining_minutes * graph[valve_id].flow_rate;
-            current_valve = valve_id;
-        }
-        // println!(
-        //     "going from {starting_valve} to {} will yield {released_pressure}",
-        //     path[0]
-        // );
-        released_pressure
-    })?;
-    Some(best_path[0])
-}
-
-fn get_all_possible_paths<'a>(
-    graph: &HashMap<&str, Valve>,
-    distances: &'a HashMap<&str, HashMap<&str, usize>>,
-    starting_valve: &str,
-    open_valves: &[&str],
-    max_path_minutes: i32,
-) -> Vec<Vec<ValveId<'a>>> {
-    assert!(max_path_minutes >= 0);
-    if max_path_minutes == 0 {
-        return vec![];
-    }
-    let res = distances[starting_valve]
-        // TODO: don't use non-deterministic HashMap iteration
+    let bitmask_indices: HashMap<&str, u16> = graph
         .iter()
-        .filter(|(id, _dist)| !open_valves.contains(id))
-        .filter(|(_id, dist)| **dist as i32 + 1 <= max_path_minutes)
-        .flat_map(|(id, dist)| {
-            let mut open_valves = open_valves.to_vec();
-            open_valves.push(id);
-
-            let mut paths = get_all_possible_paths(
-                graph,
-                distances,
-                *id,
-                &open_valves,
-                max_path_minutes - *dist as i32 - 1,
-            );
-            if paths.is_empty() {
-                return vec![vec![*id]];
-            }
-            for path in paths.iter_mut() {
-                path.insert(0, id);
-            }
-            paths
-        })
+        .filter(|(_id, valve)| valve.flow_rate > 0)
+        .enumerate()
+        .map(|(i, (id, _valve))| (*id, 1 << i))
         .collect();
-    // println!(
-    //     "possible paths starting at {starting_valve} with minutes {max_path_minutes} {:#?}",
-    //     res
-    // );
-    res
+
+    let mut part_1_max_pressures = HashMap::new();
+    visit_all_paths(
+        &graph,
+        &distances,
+        &bitmask_indices,
+        "AA",
+        30,
+        0,
+        0,
+        &mut part_1_max_pressures,
+    );
+    let part_1_ans = part_1_max_pressures.values().max().unwrap();
+
+    let mut part_2_max_pressures = HashMap::new();
+    visit_all_paths(
+        &graph,
+        &distances,
+        &bitmask_indices,
+        "AA",
+        26,
+        0,
+        0,
+        &mut part_2_max_pressures,
+    );
+    let mut part_2_ans = 0;
+    for (bitmask_1, pressure_1) in part_2_max_pressures.iter() {
+        for (bitmask_2, pressure_2) in part_2_max_pressures.iter() {
+            if (bitmask_1 & bitmask_2) == 0 {
+                part_2_ans = part_2_ans.max(pressure_1 + pressure_2)
+            }
+        }
+    }
+
+    format!("{part_1_ans} {part_2_ans}")
 }
 
-type ValveId<'a> = &'a str;
+type Bitmask = u16;
 
-#[derive(Debug)]
+#[allow(clippy::too_many_arguments)]
+fn visit_all_paths(
+    graph: &HashMap<&str, Valve>,
+    distances: &HashMap<&str, HashMap<&str, usize>>,
+    bitmask_indices: &HashMap<&str, Bitmask>,
+    current_valve: &str,
+    remaining_minutes: u64,
+    open_valves_bitmask: Bitmask,
+    released_pressure: u64,
+    max_released_pressure: &mut HashMap<Bitmask, u64>,
+) {
+    let max_val = max_released_pressure
+        .entry(open_valves_bitmask)
+        .or_insert(0);
+    if released_pressure > *max_val {
+        *max_val = released_pressure;
+    }
+
+    for (other_valve, &dist) in distances[current_valve].iter() {
+        if dist as u64 + 1 > remaining_minutes
+            || (bitmask_indices[other_valve] & open_valves_bitmask) != 0
+        {
+            continue;
+        }
+        let remaining_minutes = remaining_minutes - dist as u64 - 1;
+        visit_all_paths(
+            graph,
+            distances,
+            bitmask_indices,
+            other_valve,
+            remaining_minutes,
+            open_valves_bitmask | bitmask_indices[other_valve],
+            released_pressure + remaining_minutes * graph[other_valve].flow_rate,
+            max_released_pressure,
+        )
+    }
+}
+
 struct Valve<'a> {
     flow_rate: u64,
-    connected_valves: Vec<ValveId<'a>>,
+    connected_valves: Vec<&'a str>,
 }
 
-fn parse_graph(input: &str) -> HashMap<ValveId, Valve> {
+fn parse_graph(input: &str) -> HashMap<&str, Valve> {
     input
         .lines()
         .map(|line| {
