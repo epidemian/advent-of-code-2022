@@ -97,3 +97,9 @@ Nice sand-falling simulation. Went for a straightforward imperative solution. Al
 Interesting big-numbers crunching problem. For part 1 i could get away with a very brute-force solution of checking every position along the given line. But for part 2 i needed to come up with a more clever approach, which was pretty difficult TBH.
 
 My current solution is still a little brute-forcey —just that instead of checking all positions across a line, i'm checking all lines across the 4M needed range—but at least it runs in a reasonable time (~200ms). Still, i think a much more direct solution is possible if we could model the intersection of the 2D beacon exclusion zones better.
+
+### Day 16: Proboscidea Volcanium
+
+Freaking hardest one so far by far. It took me many attempts, and i only managed to get part 1 answer by myself. In the end i ended up "cheating" and looking for other solutions online. I'm glad i did though, as [the solution i liked the most](https://old.reddit.com/r/adventofcode/comments/zn6k1l/2022_day_16_solutions/j2xhog7/), and ended up copying, was super elegant but something i think i would never have come up with on my own. If i could send a hint to myself retroactively in time i would just say: "you can represent the opened valves with a bitmask 😉" and maybe that would have been enough to get it.
+
+I learned that Rust doesn't allow recursive closures. At least not in a direct and intuitive way.
