@@ -1,5 +1,5 @@
 use crate::dijkstra::shortest_path_distances;
-use std::collections::HashMap;
+use std::{collections::HashMap, mem};
 
 // Note: this solution was ~stolen from~ heavily inspired by
 // https://old.reddit.com/r/adventofcode/comments/zn6k1l/2022_day_16_solutions/j2xhog7/
@@ -19,7 +19,10 @@ pub fn run(input: &str) -> String {
         .iter()
         .filter(|(_id, valve)| valve.flow_rate > 0)
         .enumerate()
-        .map(|(i, (id, _valve))| (*id, 1 << i))
+        .map(|(i, (id, _valve))| {
+            assert!(i < BITMASK_BITS, "too many valves to fit on bitmask");
+            (*id, 1 << i)
+        })
         .collect();
 
     let ctx = Context {
@@ -63,6 +66,7 @@ struct Context {
 // lifetime annotations.
 type ValveId = (u8, u8);
 type Bitmask = u16;
+const BITMASK_BITS: usize = mem::size_of::<Bitmask>() * 8;
 
 fn visit_all_paths(
     ctx: &Context,
