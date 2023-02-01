@@ -8,7 +8,7 @@ pub fn run(input: &str) -> String {
             .map(|s| s.parse().expect("section IDs should be numbers"))
             .collect();
         let [elf_1_start, elf_1_end, elf_2_start, elf_2_end] = numbers[..] else {
-            panic!("invalid line format {}", line);
+            panic!("invalid line format {line}");
         };
 
         if (elf_1_start >= elf_2_start && elf_1_end <= elf_2_end)

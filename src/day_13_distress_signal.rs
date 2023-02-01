@@ -63,10 +63,10 @@ fn parse_packet(s: &str) -> Value {
                 }
             }
             b',' => {}
-            b'0'..=b'9' => {
-                let mut n = (ch - b'0') as u32;
-                while let Some(next_ch) = bytes.next_if(|ch| matches!(ch, b'0'..=b'9')) {
-                    n = n * 10 + (next_ch - b'0') as u32;
+            d if d.is_ascii_digit() => {
+                let mut n = (d - b'0') as u32;
+                while let Some(next_d) = bytes.next_if(|ch| ch.is_ascii_digit()) {
+                    n = n * 10 + (next_d - b'0') as u32;
                 }
                 let Some(list) = list_stack.last_mut() else {
                     panic!("number must appear inside a list")

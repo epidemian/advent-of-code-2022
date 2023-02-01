@@ -42,7 +42,7 @@ fn main() -> ExitCode {
 
     let run_single_day = |day_num: usize| {
         let instant = time::Instant::now();
-        let filename = format!("inputs/day{:02}.txt", day_num);
+        let filename = format!("inputs/day{day_num:02}.txt");
         match fs::read_to_string(&filename) {
             Ok(input) => {
                 let output = days[day_num - 1](&input);
@@ -51,7 +51,7 @@ fn main() -> ExitCode {
                 Ok(())
             }
             Err(err) => {
-                eprintln!("Error reading {}: {}", filename, err);
+                eprintln!("Error reading {filename}: {err}");
                 Err(())
             }
         }
