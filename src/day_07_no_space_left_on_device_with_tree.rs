@@ -14,7 +14,7 @@ pub fn run(input: &str) -> String {
     let mut file_to_delete_size = usize::MAX;
 
     root.walk(&mut |node| {
-        if let FsNode::Dir(..) = node {
+        if let FsNode::Dir { .. } = node {
             let size = node.size();
             if size <= 100_000 {
                 small_dirs_total_size += size;
@@ -29,23 +29,15 @@ pub fn run(input: &str) -> String {
 }
 
 enum FsNode {
-    File(File),
-    Dir(Dir),
-}
-
-struct File {
-    size: usize,
-}
-
-struct Dir {
-    children: HashMap<String, FsNode>,
+    File { size: usize },
+    Dir { children: HashMap<String, FsNode> },
 }
 
 impl FsNode {
     fn size(&self) -> usize {
         match self {
-            FsNode::File(file) => file.size,
-            FsNode::Dir(dir) => dir.children.values().map(FsNode::size).sum(),
+            FsNode::File { size } => *size,
+            FsNode::Dir { children } => children.values().map(FsNode::size).sum(),
         }
     }
 
@@ -54,8 +46,8 @@ impl FsNode {
         F: FnMut(&FsNode),
     {
         walk_fn(self);
-        if let FsNode::Dir(dir) = self {
-            for child in dir.children.values() {
+        if let FsNode::Dir { children } = self {
+            for child in children.values() {
                 child.walk(walk_fn);
             }
         }
@@ -63,9 +55,7 @@ impl FsNode {
 }
 
 fn parse_fs_from_terminal_output(terminal_output: &str) -> FsNode {
-    let mut root = Dir {
-        children: HashMap::new(),
-    };
+    let mut root_children = HashMap::new();
 
     let mut curr_dir_stack: Vec<&str> = vec![];
     for line in terminal_output.lines() {
@@ -87,24 +77,26 @@ fn parse_fs_from_terminal_output(terminal_output: &str) -> FsNode {
             let dir_or_size = words[0];
             let name = words[1].to_string();
             let new_node = if dir_or_size == "dir" {
-                FsNode::Dir(Dir {
+                FsNode::Dir {
                     children: HashMap::new(),
-                })
+                }
             } else {
                 let size: usize = dir_or_size.parse().expect("size should be a valid number");
-                FsNode::File(File { size })
+                FsNode::File { size }
             };
 
-            let mut curr_dir = &mut root;
+            let mut curr_dir_children = &mut root_children;
             for &name in curr_dir_stack.iter() {
-                let child = curr_dir.children.get_mut(name);
-                let Some(FsNode::Dir(child_dir)) = child else {
+                let child = curr_dir_children.get_mut(name);
+                let Some(FsNode::Dir { children: child_dir_children}) = child else {
                     panic!("curr_dir should have child directory {name}");
                 };
-                curr_dir = child_dir;
+                curr_dir_children = child_dir_children;
             }
-            curr_dir.children.insert(name, new_node);
+            curr_dir_children.insert(name, new_node);
         }
     }
-    FsNode::Dir(root)
+    FsNode::Dir {
+        children: root_children,
+    }
 }
