@@ -4,78 +4,79 @@ pub fn run(input: &str) -> String {
     format!(
         "{}, {}",
         run_rock_simulation(input, 2022),
-        run_rock_simulation(input, 1000000000000)
+        run_rock_simulation(input, 1_000_000_000_000)
     )
 }
 
 fn run_rock_simulation(input: &str, total_rock_falls: u64) -> u64 {
-    let rocks_count = ROCKS.len();
-    let left = (-1, 0);
-    let right = (1, 0);
-    let down = (0, -1);
-    let mut rock_iter = ROCKS.iter().enumerate().cycle();
+    let mut rock_iter = ROCKS.iter().copied().enumerate().cycle();
     let mut jet_iter = input.chars().enumerate().cycle();
     let mut chamber: Vec<Row> = vec![];
     let mut cyclic_height = None;
-    let mut chamber_tops_memo: HashMap<usize, ChamberTopMemo> = HashMap::new();
+    let mut previous_chamber_tops: HashMap<(usize, usize), ChamberTopMemo> = HashMap::new();
     let mut remaining_rock_falls = total_rock_falls;
     while remaining_rock_falls > 0 {
-        let (rock_idx, rock) = rock_iter.next().expect("rocks should be infinite");
-        let mut rock = rock.to_vec();
-        move_rock(&mut rock, (2, chamber.len() as i64 + 3), &chamber);
+        let (rock_idx, mut rock) = rock_iter.next().expect("rocks should be infinite");
+        let mut rock_height = chamber.len() + 3;
 
         loop {
             let (jet_idx, jet_ch) = jet_iter.next().expect("hot air jets should be infinite");
-            let jet_dir = match jet_ch {
-                '<' => left,
-                '>' => right,
-                _ => unreachable!("unexpected character '{jet_ch}'"),
+            if let Some(shifted_rock) = shift_rock(rock, jet_ch) {
+                if !rock_collides(shifted_rock, rock_height, &chamber) {
+                    rock = shifted_rock;
+                }
             };
-            move_rock(&mut rock, jet_dir, &chamber);
-            let should_stop = !move_rock(&mut rock, down, &chamber);
+            let should_stop = rock_height == 0 || rock_collides(rock, rock_height - 1, &chamber);
             if !should_stop {
+                rock_height -= 1;
                 continue;
             }
 
-            for (x, y) in rock.iter() {
-                while *y as usize >= chamber.len() {
-                    chamber.push(Default::default());
+            for (i, rock_row) in rock.iter().enumerate() {
+                if *rock_row == 0 {
+                    continue;
                 }
-                chamber[*y as usize][*x as usize] = ROCK;
+                let chamber_index = rock_height + i;
+                while chamber_index >= chamber.len() {
+                    chamber.push(0);
+                }
+                chamber[chamber_index] |= rock_row;
             }
 
             if cyclic_height.is_some() {
                 break;
             }
 
-            let chamber_top = &chamber[chamber.len() - 5.min(chamber.len())..];
-            let chamber_top_sealed = chamber_top.windows(2).any(|w| {
-                let (row_a, row_b) = (w[0], w[1]);
-                row_a
-                    .iter()
-                    .zip(row_b.iter())
-                    .all(|(cell_a, cell_b)| *cell_a == ROCK || *cell_b == ROCK)
-            });
+            let chamber_height = chamber.len();
+            if chamber_height < CHAMBER_TOP_HEIGHT {
+                break;
+            }
+            let chamber_top: [Row; CHAMBER_TOP_HEIGHT] = chamber
+                [chamber_height - CHAMBER_TOP_HEIGHT..]
+                .try_into()
+                .expect("chamber should have enough height");
+
+            let chamber_top_sealed = chamber_top.windows(2).any(|w| (w[0] | w[1]) == 0b1111111);
             if !chamber_top_sealed {
                 break;
             }
 
-            let combined_idx = jet_idx * rocks_count + rock_idx;
-            if let Some(memo) = &chamber_tops_memo.get(&combined_idx) {
-                if chamber_top == memo.chamber_top {
-                    let height_diff = chamber.len() - memo.chamber_height;
-                    let fallen_rocks_diff = memo.remaining_rock_falls - remaining_rock_falls;
+            let combined_idx = (rock_idx, jet_idx);
+            if let Some(prev) = &previous_chamber_tops.get(&combined_idx) {
+                if chamber_top == prev.chamber_top {
+                    let height_diff = chamber_height - prev.chamber_height;
+                    let fallen_rocks_diff = prev.remaining_rock_falls - remaining_rock_falls;
                     let remaining_cycles = (remaining_rock_falls - 1) / fallen_rocks_diff;
                     cyclic_height = Some(remaining_cycles * height_diff as u64);
                     remaining_rock_falls -= remaining_cycles * fallen_rocks_diff;
                     break;
                 }
             }
-            chamber_tops_memo.insert(
+            previous_chamber_tops.insert(
                 combined_idx,
                 ChamberTopMemo {
-                    chamber_top: chamber_top.to_vec(),
-                    chamber_height: chamber.len(),
+                    chamber_top,
+                    chamber_height,
                     remaining_rock_falls,
                 },
             );
@@ -88,51 +89,71 @@ fn run_rock_simulation(input: &str, total_rock_falls: u64) -> u64 {
     chamber.len() as u64 + cyclic_height.unwrap_or(0)
 }
 
-const ROCKS: [&[Point]; 5] = [
-    // ####
-    &[(0, 0), (1, 0), (2, 0), (3, 0)],
-    // .#.
-    // ###
-    // .#.
-    &[(1, 2), (0, 1), (1, 1), (2, 1), (1, 0)],
-    // ..#
-    // ..#
-    // ###
-    &[(2, 2), (2, 1), (0, 0), (1, 0), (2, 0)],
-    // #
-    // #
-    // #
-    // #
-    &[(0, 0), (0, 1), (0, 2), (0, 3)],
-    // ##
-    // ##
-    &[(0, 0), (0, 1), (1, 0), (1, 1)],
+type Row = u8;
+type Rock = [Row; 4];
+
+// First byte is bottom row of rock.
+#[rustfmt::skip]
+const ROCKS: [Rock; 5] = [
+    [
+        0b0011110,
+        0b0000000,
+        0b0000000,
+        0b0000000,
+    ],
+    [
+        0b0001000,
+        0b0011100,
+        0b0001000,
+        0b0000000,
+    ],
+    [
+        0b0011100,
+        0b0000100,
+        0b0000100,
+        0b0000000,
+    ],
+    [
+        0b0010000,
+        0b0010000,
+        0b0010000,
+        0b0010000,
+    ],
+    [
+        0b0011000,
+        0b0011000,
+        0b0000000,
+        0b0000000,
+    ],
 ];
 
-const ROCK: u8 = 1;
-type Point = (i64, i64);
-type Row = [u8; 7];
+const CHAMBER_TOP_HEIGHT: usize = 4;
 struct ChamberTopMemo {
-    chamber_top: Vec<Row>,
+    chamber_top: [Row; CHAMBER_TOP_HEIGHT],
     chamber_height: usize,
     remaining_rock_falls: u64,
 }
 
-fn move_rock(rock: &mut [Point], (dx, dy): Point, chamber: &[Row]) -> bool {
-    for (x, y) in rock.iter() {
-        let x2 = x + dx;
-        let y2 = y + dy;
-        if x2 < 0 || x2 >= 7 || y2 < 0 {
-            return false;
+fn shift_rock(rock: Rock, jet_ch: char) -> Option<Rock> {
+    match jet_ch {
+        '<' => {
+            if rock.iter().all(|row| row & 0b1000000 == 0) {
+                return Some(rock.map(|row| row << 1));
+            };
         }
-        if (y2 as usize) < chamber.len() && chamber[y2 as usize][x2 as usize] == ROCK {
-            return false;
+        '>' => {
+            if rock.iter().all(|row| row & 1 == 0) {
+                return Some(rock.map(|row| row >> 1));
+            }
         }
+        _ => unreachable!("unexpected character '{jet_ch}'"),
     }
+    None
+}
 
-    for (x, y) in rock.iter_mut() {
-        *x += dx;
-        *y += dy;
-    }
-    true
+fn rock_collides(rock: Rock, rock_height: usize, chamber: &[Row]) -> bool {
+    rock.iter().enumerate().any(|(i, rock_row)| {
+        let chamber_row = chamber.get(rock_height + i).unwrap_or(&0);
+        rock_row & chamber_row != 0
+    })
 }
