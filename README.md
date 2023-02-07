@@ -103,3 +103,9 @@ My current solution is still a little brute-forcey —just that instead of check
 Freaking hardest one so far by far. It took me many attempts, and i only managed to get part 1 answer by myself. In the end i ended up "cheating" and looking for other solutions online. I'm glad i did though, as [the solution i liked the most](https://old.reddit.com/r/adventofcode/comments/zn6k1l/2022_day_16_solutions/j2xhog7/), and ended up copying, was super elegant but something i think i would never have come up with on my own. If i could send a hint to myself retroactively in time i would just say: "you can represent the opened valves with a bitmask 😉" and maybe that would have been enough to get it.
 
 I learned that Rust doesn't allow recursive closures. At least not in a direct and intuitive way.
+
+### DAy 17: Pyroclastic Flow
+
+A nice Tetris-like rock fall simulation. Part 1 was relatively straightforward, but part 2 had a twist that required some cleverness to get the answer by detecting cycles on the rock falling patterns instead of simulating 1 trillion rock falls, which would've taken too much computing time.
+
+For kicks and giggles, i also changed the solution to use a binary representation for the chamber and rock, using a single byte for each row, and bitwise operations to detect collisions and the like. Not really a necessary performance improvement or anything, but a fun experiment nevertheless :)
