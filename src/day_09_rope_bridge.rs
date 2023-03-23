@@ -6,8 +6,8 @@ pub fn run(input: &str) -> String {
 }
 
 fn run_rope_sym(rope_length: usize, input: &str) -> usize {
-    let mut rope = vec![(0, 0); rope_length];
-    let mut visited_positions: HashSet<(i32, i32)> = [(0, 0)].into_iter().collect();
+    let mut rope = vec![(0i32, 0i32); rope_length];
+    let mut visited_positions = HashSet::from([(0, 0)]);
 
     for direction in parse_step_movements(input) {
         let (head_x, head_y) = &mut rope[0];
@@ -23,8 +23,8 @@ fn run_rope_sym(rope_length: usize, input: &str) -> usize {
             let (prev_knot_x, prev_knot_y) = rope[i - 1];
             let (knot_x, knot_y) = &mut rope[i];
 
-            let dx: i32 = prev_knot_x - *knot_x;
-            let dy: i32 = prev_knot_y - *knot_y;
+            let dx = prev_knot_x - *knot_x;
+            let dy = prev_knot_y - *knot_y;
 
             let knots_touching = dx.abs() <= 1 && dy.abs() <= 1;
             if !knots_touching {
