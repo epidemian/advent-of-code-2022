@@ -14,9 +14,9 @@ fn run_monkey_in_the_middle_rounds(
     relief_after_inspection: bool,
 ) -> u64 {
     let mut monkeys: Vec<_> = input.split("\n\n").map(Monkey::parse).collect();
-    // Trick: keep track of the product of all divisibility tests' divisors so
-    // that each time the worry level for an item is increased we can mod that
-    // number with this and keep it from ballooning out of control.
+    // Trick: keep track of the product of all divisibility tests' divisors so that each time the
+    // worry level for an item is increased we can mod that number with this and keep it from
+    // ballooning out of control.
     let divisors_product: u64 = monkeys.iter().map(|m| m.div_test_divisor).product();
 
     for _ in 0..rounds_count {

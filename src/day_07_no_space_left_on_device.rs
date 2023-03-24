@@ -40,7 +40,7 @@ fn calc_directory_sizes_from_terminal_output(terminal_output: &str) -> HashMap<S
                 cmd => unreachable!("unknown command {cmd}"),
             }
         } else {
-            // line is part of `ls` output.
+            // Line is part of `ls` output.
             let dir_or_size = words[0];
             if dir_or_size != "dir" {
                 let size: usize = dir_or_size.parse().expect("size should be a valid number");

@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-// Another attempt at day 7, trying to use a "more reified" data structure for
-// the file system, where directories and files are represented using a tree
-// structure.
+// Another attempt at day 7, trying to use a "more reified" data structure for the file system,
+// where directories and files are represented using a tree structure.
 #[allow(dead_code)]
 pub fn run(input: &str) -> String {
     let root = parse_fs_from_terminal_output(input);
@@ -73,7 +72,7 @@ fn parse_fs_from_terminal_output(terminal_output: &str) -> FsNode {
                 cmd => unreachable!("unknown command {cmd}"),
             }
         } else {
-            // line is part of `ls` output.
+            // Line is part of `ls` output.
             let dir_or_size = words[0];
             let name = words[1].to_string();
             let new_node = if dir_or_size == "dir" {

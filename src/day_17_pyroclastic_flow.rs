@@ -29,10 +29,9 @@ fn run_rock_simulation(input: &str, total_rock_falls: u64) -> u64 {
             .try_into()
             .expect("chamber should have enough height");
 
-        // Note: this is not foolproof. Ideally, we'd want to detect if there's
-        // no path for a piece to fall through these chamber_top rows. But
-        // instead, we do this simple/cheap check between pairs of consecutive
-        // rows, which works well for both the sample and real inputs :)
+        // Note: this is not foolproof. Ideally, we'd want to detect if there's no path for a piece
+        // to fall through the chamber_top rows. But instead, we do this simple/cheap check between
+        // pairs of consecutive rows, which works well for both the sample and real inputs :)
         let chamber_top_sealed = chamber_top.windows(2).any(|w| (w[0] | w[1]) == 0b1111111);
         if !chamber_top_sealed {
             continue;

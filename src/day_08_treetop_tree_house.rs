@@ -16,13 +16,12 @@ pub fn run(input: &str) -> String {
             for (i, &(dx, dy)) in directions.iter().enumerate() {
                 let (mut x, mut y) = (x, y);
                 loop {
-                    // Let negative out-of-bounds wrap around and only check for
-                    // going over the grid size.
+                    // Let negative out-of-bounds wrap around and only check for going over the grid
+                    // size.
                     x = x.wrapping_add_signed(dx);
                     y = y.wrapping_add_signed(dy);
                     if x >= grid_width || y >= grid_height {
-                        // Viewing distance extends to the edge of the grid, so
-                        // the tree is visible.
+                        // Viewing distance extends to the edge of the grid, so the tree is visible.
                         visible = true;
                         break;
                     }

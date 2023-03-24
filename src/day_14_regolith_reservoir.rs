@@ -70,8 +70,8 @@ fn parse_map(input: &str) -> Map {
         .expect("there should at least one point");
 
     let height = max_y + 1;
-    // Sand cannot spread more that the map height to the right. The +2 is to
-    // consider the floor added on part 2.
+    // Sand cannot spread more that the map height to the right. The +2 is to consider the floor
+    // added on part 2.
     let width = SAND_POUR_X + height + 2;
     let mut map = vec![vec![Air; width]; height];
     for path in paths {

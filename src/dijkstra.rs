@@ -2,8 +2,7 @@ use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::hash::Hash;
 
-// Calculates the shortest path distances starting from a given node using
-// Dijkstra's algorithm.
+// Calculates the shortest path distances starting from a given node using Dijkstra's algorithm.
 pub fn shortest_path_distances<T, FT, IT>(start: &T, successors: FT) -> HashMap<T, usize>
 where
     T: Eq + Hash + Clone,

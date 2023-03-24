@@ -62,8 +62,7 @@ struct Context {
     bitmask_indices: HashMap<ValveId, Bitmask>,
 }
 
-// Prefer 2-byte tuples for IDs instead of &str like "AA" to avoid adding
-// lifetime annotations.
+// Prefer 2-byte tuples for IDs instead of &str like "AA" to avoid adding lifetime annotations.
 type ValveId = (u8, u8);
 type Bitmask = u16;
 const BITMASK_BITS: usize = mem::size_of::<Bitmask>() * 8;
