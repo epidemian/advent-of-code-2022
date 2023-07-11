@@ -109,3 +109,7 @@ I learned that Rust doesn't allow recursive closures. At least not in a direct a
 A nice Tetris-like rock fall simulation. Part 1 was relatively straightforward, but part 2 had a twist that required some cleverness to get the answer by detecting cycles on the rock falling patterns instead of simulating 1 trillion rock falls, which would've taken too much computing time.
 
 For kicks and giggles, i also changed the solution to use a binary representation for the chamber and rock, using a single byte for each row, and bitwise operations to detect collisions and the like. Not really a necessary performance improvement or anything, but a fun experiment nevertheless :)
+
+### Day 18: Boiling Boulders
+
+A relatively simple 3D flood-filling problem. I noticed that when working with 2D or 3D grids, there seems to always be some tradeoff when picking either `usize`s or signed integers to represent the points on the grid. When using `usize` variables, no conversion is needed to access or write to the grid, but moving around it is cumbersome as you need to take care of possible underflows when going below 0. And when using signed integer ariables, moving around is easy, as you can subtract without worry of underflows and just do the bounds-checks before accessing the grid, but on the flip side you need to do lots of conversions to and from `usize` when accessing the grid. There's no free lunch.
