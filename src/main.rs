@@ -18,6 +18,7 @@ mod day_14_regolith_reservoir;
 mod day_15_beacon_exclusion_zone;
 mod day_16_proboscidea_volcanium;
 mod day_17_pyroclastic_flow;
+mod day_18_boiling_boulder;
 mod dijkstra;
 
 fn main() -> ExitCode {
@@ -40,6 +41,7 @@ fn main() -> ExitCode {
         day_15_beacon_exclusion_zone::run,
         day_16_proboscidea_volcanium::run,
         day_17_pyroclastic_flow::run,
+        day_18_boiling_boulder::run,
     ];
 
     let run_single_day = |day_num: usize| {
