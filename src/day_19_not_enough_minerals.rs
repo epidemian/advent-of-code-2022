@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 pub fn run(input: &str) -> String {
     let blueprints: Vec<_> = input.lines().map(parse_blueprint).collect();
 
@@ -32,24 +30,20 @@ impl Blueprint {
 
     fn find_max_geodes_in(&self, minutes: u32) -> u32 {
         let mut max_geodes = 0;
-        let mut state_cache = HashMap::new();
         find_max_geodes(
             self,
             &State::new(),
             minutes,
-            &mut state_cache,
+            false,
+            false,
+            false,
             &mut max_geodes,
-        );
-        println!(
-            "max geodes for blueprint {} in {minutes} minutes: {max_geodes}, cache size={}",
-            self.id,
-            state_cache.len()
         );
         max_geodes
     }
 }
 
-#[derive(Default, Debug, Hash, Eq, PartialEq, Copy, Clone)]
+#[derive(Default)]
 struct State {
     ore: u32,
     clay: u32,
@@ -101,17 +95,11 @@ fn find_max_geodes(
     blueprint: &Blueprint,
     state: &State,
     remaining_minutes: u32,
-    state_cache: &mut HashMap<State, (u32, u32)>,
+    could_make_ore_robot: bool,
+    could_make_clay_robot: bool,
+    could_make_obsidian_robot: bool,
     max_geodes: &mut u32,
 ) {
-    if let Some((cached_minutes, _cached_max_geodes)) = state_cache.get(state) {
-        // We have seen this same state but with more remaining minutes, so it doesn't make sense to
-        // evaluate this state+minutes combination.
-        if remaining_minutes <= *cached_minutes {
-            return;
-        }
-    }
-
     if remaining_minutes == 0 {
         if state.geodes > *max_geodes {
             *max_geodes = state.geodes;
@@ -119,48 +107,14 @@ fn find_max_geodes(
         return;
     }
 
-    let can_make_ore_robot = state.ore >= blueprint.ore_robot_ore_cost;
-    if can_make_ore_robot {
-        let mut new_state = state.tick();
-        new_state.ore -= blueprint.ore_robot_ore_cost;
-        new_state.ore_robots += 1;
-        find_max_geodes(
-            blueprint,
-            &new_state,
-            remaining_minutes - 1,
-            state_cache,
-            max_geodes,
-        );
-    }
-
-    let can_make_clay_robot = state.ore >= blueprint.clay_robot_ore_cost;
-    if can_make_clay_robot {
-        let mut new_state = state.tick();
-        new_state.clay_robots += 1;
-        new_state.ore -= blueprint.clay_robot_ore_cost;
-        find_max_geodes(
-            blueprint,
-            &new_state,
-            remaining_minutes - 1,
-            state_cache,
-            max_geodes,
-        );
-    }
-
-    let can_make_obsidian_robot = state.ore >= blueprint.obsidian_robot_ore_cost
-        && state.clay >= blueprint.obsidian_robot_clay_cost;
-    if can_make_obsidian_robot {
-        let mut new_state = state.tick();
-        new_state.obsidian_robots += 1;
-        new_state.ore -= blueprint.obsidian_robot_ore_cost;
-        new_state.clay -= blueprint.obsidian_robot_clay_cost;
-        find_max_geodes(
-            blueprint,
-            &new_state,
-            remaining_minutes - 1,
-            state_cache,
-            max_geodes,
-        );
+    // If there are N remaining minutes, we could, at most, produce N geode robots, which would
+    // crack N-1 + N-2 + ... + 1 geodes. This is the same as the sum the N-1 first integers, which
+    // is (N-1)*N/2
+    let geode_upper_bound = state.geodes
+        + state.geode_robots * remaining_minutes
+        + ((remaining_minutes - 1) * remaining_minutes) / 2;
+    if geode_upper_bound <= *max_geodes {
+        return;
     }
 
     let can_make_geode_robot = state.ore >= blueprint.geode_robot_ore_cost
@@ -174,26 +128,74 @@ fn find_max_geodes(
             blueprint,
             &new_state,
             remaining_minutes - 1,
-            state_cache,
+            false,
+            false,
+            false,
+            max_geodes,
+        );
+
+        // If we can make a geode robot this turn, don't evaluate other possibilities. Making geode
+        // robots is always best :)
+        return;
+    }
+
+    let can_make_obsidian_robot = state.ore >= blueprint.obsidian_robot_ore_cost
+        && state.clay >= blueprint.obsidian_robot_clay_cost;
+    if can_make_obsidian_robot && !could_make_obsidian_robot {
+        let mut new_state = state.tick();
+        new_state.obsidian_robots += 1;
+        new_state.ore -= blueprint.obsidian_robot_ore_cost;
+        new_state.clay -= blueprint.obsidian_robot_clay_cost;
+        find_max_geodes(
+            blueprint,
+            &new_state,
+            remaining_minutes - 1,
+            false,
+            false,
+            false,
             max_geodes,
         );
     }
 
-    // let can_make_any_robot = can_make_ore_robot
-    //     && can_make_clay_robot
-    //     && can_make_obsidian_robot
-    //     && can_make_geode_robot;
-    // if can_make_any_robot {
-    //     return;
-    // }
+    let can_make_clay_robot = state.ore >= blueprint.clay_robot_ore_cost;
+    if can_make_clay_robot && !could_make_clay_robot {
+        let mut new_state = state.tick();
+        new_state.clay_robots += 1;
+        new_state.ore -= blueprint.clay_robot_ore_cost;
+        find_max_geodes(
+            blueprint,
+            &new_state,
+            remaining_minutes - 1,
+            false,
+            false,
+            false,
+            max_geodes,
+        );
+    }
+
+    let can_make_ore_robot = state.ore >= blueprint.ore_robot_ore_cost;
+    if can_make_ore_robot && !could_make_ore_robot {
+        let mut new_state = state.tick();
+        new_state.ore -= blueprint.ore_robot_ore_cost;
+        new_state.ore_robots += 1;
+        find_max_geodes(
+            blueprint,
+            &new_state,
+            remaining_minutes - 1,
+            false,
+            false,
+            false,
+            max_geodes,
+        );
+    }
 
     find_max_geodes(
         blueprint,
         &state.tick(),
         remaining_minutes - 1,
-        state_cache,
+        can_make_ore_robot,
+        can_make_clay_robot,
+        can_make_obsidian_robot,
         max_geodes,
     );
-
-    state_cache.insert(*state, (remaining_minutes, *max_geodes));
 }
