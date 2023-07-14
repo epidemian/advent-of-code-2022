@@ -1,12 +1,15 @@
 pub fn run(input: &str) -> String {
-    let blueprints: Vec<_> = input.lines().map(Blueprint::parse).collect();
+    let blueprints: Vec<_> = input.lines().map(parse_blueprint).collect();
 
-    let total_quality_level: u32 = blueprints.iter().map(|b| b.quality_level()).sum();
+    let total_quality_level: u32 = blueprints
+        .iter()
+        .map(|b| b.id * find_max_geodes(b, 24))
+        .sum();
 
     let max_geodes_product: u32 = blueprints
         .iter()
         .take(3)
-        .map(|b| b.find_max_geodes_in(32))
+        .map(|b| find_max_geodes(b, 32))
         .product();
 
     format!("{total_quality_level} {max_geodes_product}")
@@ -22,32 +25,20 @@ struct Blueprint {
     geode_robot_obsidian_cost: u32,
 }
 
-impl Blueprint {
-    fn parse(line: &str) -> Blueprint {
-        let numbers: Vec<_> = line
-            .split([' ', ':'])
-            .filter_map(|word| word.parse().ok())
-            .collect();
+fn parse_blueprint(line: &str) -> Blueprint {
+    let numbers: Vec<_> = line
+        .split([' ', ':'])
+        .filter_map(|word| word.parse().ok())
+        .collect();
 
-        Blueprint {
-            id: numbers[0],
-            ore_robot_ore_cost: numbers[1],
-            clay_robot_ore_cost: numbers[2],
-            obsidian_robot_ore_cost: numbers[3],
-            obsidian_robot_clay_cost: numbers[4],
-            geode_robot_ore_cost: numbers[5],
-            geode_robot_obsidian_cost: numbers[6],
-        }
-    }
-
-    fn quality_level(&self) -> u32 {
-        self.id * self.find_max_geodes_in(24)
-    }
-
-    fn find_max_geodes_in(&self, minutes: u32) -> u32 {
-        let mut max_geodes = 0;
-        State::new(minutes).find_max_geodes(self, false, false, false, &mut max_geodes);
-        max_geodes
+    Blueprint {
+        id: numbers[0],
+        ore_robot_ore_cost: numbers[1],
+        clay_robot_ore_cost: numbers[2],
+        obsidian_robot_ore_cost: numbers[3],
+        obsidian_robot_clay_cost: numbers[4],
+        geode_robot_ore_cost: numbers[5],
+        geode_robot_obsidian_cost: numbers[6],
     }
 }
 
@@ -83,86 +74,82 @@ impl State {
             ..*self
         }
     }
+}
 
-    fn geode_upper_bound(&self) -> u32 {
+fn find_max_geodes(blueprint: &Blueprint, minutes: u32) -> u32 {
+    let mut max_geodes = 0;
+    let no_info = [false; 3];
+    let mut stack = vec![(State::new(minutes), no_info)];
+    while let Some((state, prev_minute_info)) = stack.pop() {
+        if state.remaining_minutes == 0 {
+            max_geodes = max_geodes.max(state.geodes);
+            continue;
+        }
+
         // If there are N remaining minutes, we could, at most, produce N geode robots, which would
         // crack N-1 + N-2 + ... + 1 geodes. This is the same as the sum the N-1 first integers,
         // which is (N-1)*N/2
-        self.geodes
-            + self.geode_robots * self.remaining_minutes
-            + (self.remaining_minutes - 1) * self.remaining_minutes / 2
-    }
-
-    fn find_max_geodes(
-        &self,
-        blueprint: &Blueprint,
-        could_make_ore_robot: bool,
-        could_make_clay_robot: bool,
-        could_make_obsidian_robot: bool,
-        max_geodes: &mut u32,
-    ) {
-        if self.remaining_minutes == 0 {
-            if self.geodes > *max_geodes {
-                *max_geodes = self.geodes;
-            }
-            return;
+        let geode_upper_bound = state.geodes
+            + state.geode_robots * state.remaining_minutes
+            + (state.remaining_minutes - 1) * state.remaining_minutes / 2;
+        if geode_upper_bound <= max_geodes {
+            continue;
         }
 
-        if self.geode_upper_bound() <= *max_geodes {
-            return;
-        }
-
-        let can_make_geode_robot = self.ore >= blueprint.geode_robot_ore_cost
-            && self.obsidian >= blueprint.geode_robot_obsidian_cost;
+        let can_make_geode_robot = state.ore >= blueprint.geode_robot_ore_cost
+            && state.obsidian >= blueprint.geode_robot_obsidian_cost;
         if can_make_geode_robot {
-            let mut new_state = self.tick();
+            let mut new_state = state.tick();
             new_state.geode_robots += 1;
             new_state.ore -= blueprint.geode_robot_ore_cost;
             new_state.obsidian -= blueprint.geode_robot_obsidian_cost;
-            new_state.find_max_geodes(blueprint, false, false, false, max_geodes);
+            stack.push((new_state, no_info));
 
             // If we can make a geode robot this turn, don't evaluate other possibilities. Making
             // geode robots is always best :)
-            return;
+            continue;
         }
 
-        let can_make_obsidian_robot = self.ore >= blueprint.obsidian_robot_ore_cost
-            && self.clay >= blueprint.obsidian_robot_clay_cost;
+        let [could_make_ore_robot, could_make_clay_robot, could_make_obsidian_robot] =
+            prev_minute_info;
+
+        let can_make_obsidian_robot = state.ore >= blueprint.obsidian_robot_ore_cost
+            && state.clay >= blueprint.obsidian_robot_clay_cost;
         if can_make_obsidian_robot && !could_make_obsidian_robot {
-            let mut new_state = self.tick();
+            let mut new_state = state.tick();
             new_state.obsidian_robots += 1;
             new_state.ore -= blueprint.obsidian_robot_ore_cost;
             new_state.clay -= blueprint.obsidian_robot_clay_cost;
-            new_state.find_max_geodes(blueprint, false, false, false, max_geodes);
+            stack.push((new_state, no_info));
         }
 
-        let can_make_clay_robot = self.ore >= blueprint.clay_robot_ore_cost;
-        let enough_clay_robots = self.clay_robots >= blueprint.obsidian_robot_clay_cost;
+        let can_make_clay_robot = state.ore >= blueprint.clay_robot_ore_cost;
+        let enough_clay_robots = state.clay_robots >= blueprint.obsidian_robot_clay_cost;
         if can_make_clay_robot && !could_make_clay_robot && !enough_clay_robots {
-            let mut new_state = self.tick();
+            let mut new_state = state.tick();
             new_state.clay_robots += 1;
             new_state.ore -= blueprint.clay_robot_ore_cost;
-            new_state.find_max_geodes(blueprint, false, false, false, max_geodes);
+            stack.push((new_state, no_info));
         }
 
-        let can_make_ore_robot = self.ore >= blueprint.ore_robot_ore_cost;
-        let enough_ore_robots = self.ore_robots >= blueprint.ore_robot_ore_cost
-            && self.ore_robots >= blueprint.clay_robot_ore_cost
-            && self.ore_robots >= blueprint.obsidian_robot_ore_cost
-            && self.ore_robots >= blueprint.geode_robot_ore_cost;
+        let can_make_ore_robot = state.ore >= blueprint.ore_robot_ore_cost;
+        let enough_ore_robots = state.ore_robots >= blueprint.ore_robot_ore_cost
+            && state.ore_robots >= blueprint.clay_robot_ore_cost
+            && state.ore_robots >= blueprint.obsidian_robot_ore_cost
+            && state.ore_robots >= blueprint.geode_robot_ore_cost;
         if can_make_ore_robot && !could_make_ore_robot && !enough_ore_robots {
-            let mut new_state = self.tick();
+            let mut new_state = state.tick();
             new_state.ore -= blueprint.ore_robot_ore_cost;
             new_state.ore_robots += 1;
-            new_state.find_max_geodes(blueprint, false, false, false, max_geodes);
+            stack.push((new_state, no_info));
         }
 
-        self.tick().find_max_geodes(
-            blueprint,
+        let minute_info = [
             can_make_ore_robot,
             can_make_clay_robot,
             can_make_obsidian_robot,
-            max_geodes,
-        );
+        ];
+        stack.push((state.tick(), minute_info))
     }
+    max_geodes
 }
