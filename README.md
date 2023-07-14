@@ -113,3 +113,15 @@ For kicks and giggles, i also changed the solution to use a binary representatio
 ### Day 18: Boiling Boulders
 
 A relatively simple 3D flood-filling problem. I noticed that when working with 2D or 3D grids, there seems to always be some tradeoff when picking either `usize`s or signed integers to represent the points on the grid. When using `usize` variables, no conversion is needed to access or write to the grid, but moving around it is cumbersome as you need to take care of possible underflows when going below 0. And when using signed integer ariables, moving around is easy, as you can subtract without worry of underflows and just do the bounds-checks before accessing the grid, but on the flip side you need to do lots of conversions to and from `usize` when accessing the grid. There's no free lunch.
+
+### Day 19: Not Enough Minerals
+
+An nice <abbr title="Real-time strategy">RTS</abbr>-themed puzzle based on creating robots that collect resources and optimizing the end amount of one of those resources: geodes. A totally naive implementation of pure brute-forcing all state possibilities was too slow, even having the power of an efficiently-compiled language at my disposal, so this became mostly a puzzle of trying to prune the search tree of unnecessary branches.
+
+The interesting pruning "optimizations" were:
+
+- Discarding a state node completely if there's no chance of it achieving more geodes than what's the current maximum found on another branch. This was done in a very conservative way, considering the best-case scenario —producing geode-cracking robots every minute till the end— but it was still surprisingly efficient in cutting off the runtime from several seconds to ~1 sec.
+- In the cases where there are enough materials to build a robot type (e.g. ore) but we wait one minute instead, ignore the case of building that robot type on the next minute, as it doesn't make sense to build the same thing later if we have the possibility of building it on a turn where we just waited.
+- Not building robots of a certain type if there's already enough of them to build wny robot we want on a single turn. This doesn't apply to geode-cracking robots, obviously, since we always want more of those. And it doesn't apply to obsidian robots either, but only because in the 32 simulated minutes, we don't reach any state where this condition of producing enough obsidian to build a geode robot per minute is met. It is applied to ore and clay robots though, and it made a huge difference in the final runtime, lowering it from ~0.5s to ~15ms :)
+
+Besides that, this was also a fun challenge of algorithmic modelling. I started doing a depth-first search in a recursive fashion. But after reaching an efficient implementation that way, i rewrote that main search function to use a classic DFS imperative loop and a reified stack variable, and i liked the result much better. The recursive version needed quite a bit of parameters to pass between one state and the next, while the imperative version can just use local variables for that, which i think is easier to keep track of.
