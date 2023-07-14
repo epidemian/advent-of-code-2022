@@ -32,8 +32,7 @@ impl Blueprint {
         let mut max_geodes = 0;
         find_max_geodes(
             self,
-            &State::new(),
-            minutes,
+            &State::new(minutes),
             false,
             false,
             false,
@@ -53,12 +52,14 @@ struct State {
     clay_robots: u32,
     obsidian_robots: u32,
     geode_robots: u32,
+    remaining_minutes: u32,
 }
 
 impl State {
-    fn new() -> State {
+    fn new(remaining_minutes: u32) -> State {
         State {
             ore_robots: 1,
+            remaining_minutes,
             ..State::default()
         }
     }
@@ -69,6 +70,7 @@ impl State {
             clay: self.clay + self.clay_robots,
             obsidian: self.obsidian + self.obsidian_robots,
             geodes: self.geodes + self.geode_robots,
+            remaining_minutes: self.remaining_minutes - 1,
             ..*self
         }
     }
@@ -94,13 +96,12 @@ fn parse_blueprint(line: &str) -> Blueprint {
 fn find_max_geodes(
     blueprint: &Blueprint,
     state: &State,
-    remaining_minutes: u32,
     could_make_ore_robot: bool,
     could_make_clay_robot: bool,
     could_make_obsidian_robot: bool,
     max_geodes: &mut u32,
 ) {
-    if remaining_minutes == 0 {
+    if state.remaining_minutes == 0 {
         if state.geodes > *max_geodes {
             *max_geodes = state.geodes;
         }
@@ -111,8 +112,8 @@ fn find_max_geodes(
     // crack N-1 + N-2 + ... + 1 geodes. This is the same as the sum the N-1 first integers, which
     // is (N-1)*N/2
     let geode_upper_bound = state.geodes
-        + state.geode_robots * remaining_minutes
-        + ((remaining_minutes - 1) * remaining_minutes) / 2;
+        + state.geode_robots * state.remaining_minutes
+        + (state.remaining_minutes - 1) * state.remaining_minutes / 2;
     if geode_upper_bound <= *max_geodes {
         return;
     }
@@ -124,15 +125,7 @@ fn find_max_geodes(
         new_state.geode_robots += 1;
         new_state.ore -= blueprint.geode_robot_ore_cost;
         new_state.obsidian -= blueprint.geode_robot_obsidian_cost;
-        find_max_geodes(
-            blueprint,
-            &new_state,
-            remaining_minutes - 1,
-            false,
-            false,
-            false,
-            max_geodes,
-        );
+        find_max_geodes(blueprint, &new_state, false, false, false, max_geodes);
 
         // If we can make a geode robot this turn, don't evaluate other possibilities. Making geode
         // robots is always best :)
@@ -146,15 +139,7 @@ fn find_max_geodes(
         new_state.obsidian_robots += 1;
         new_state.ore -= blueprint.obsidian_robot_ore_cost;
         new_state.clay -= blueprint.obsidian_robot_clay_cost;
-        find_max_geodes(
-            blueprint,
-            &new_state,
-            remaining_minutes - 1,
-            false,
-            false,
-            false,
-            max_geodes,
-        );
+        find_max_geodes(blueprint, &new_state, false, false, false, max_geodes);
     }
 
     let can_make_clay_robot = state.ore >= blueprint.clay_robot_ore_cost;
@@ -162,15 +147,7 @@ fn find_max_geodes(
         let mut new_state = state.tick();
         new_state.clay_robots += 1;
         new_state.ore -= blueprint.clay_robot_ore_cost;
-        find_max_geodes(
-            blueprint,
-            &new_state,
-            remaining_minutes - 1,
-            false,
-            false,
-            false,
-            max_geodes,
-        );
+        find_max_geodes(blueprint, &new_state, false, false, false, max_geodes);
     }
 
     let can_make_ore_robot = state.ore >= blueprint.ore_robot_ore_cost;
@@ -178,21 +155,12 @@ fn find_max_geodes(
         let mut new_state = state.tick();
         new_state.ore -= blueprint.ore_robot_ore_cost;
         new_state.ore_robots += 1;
-        find_max_geodes(
-            blueprint,
-            &new_state,
-            remaining_minutes - 1,
-            false,
-            false,
-            false,
-            max_geodes,
-        );
+        find_max_geodes(blueprint, &new_state, false, false, false, max_geodes);
     }
 
     find_max_geodes(
         blueprint,
         &state.tick(),
-        remaining_minutes - 1,
         can_make_ore_robot,
         can_make_clay_robot,
         can_make_obsidian_robot,
