@@ -137,7 +137,8 @@ impl State {
         }
 
         let can_make_clay_robot = self.ore >= blueprint.clay_robot_ore_cost;
-        if can_make_clay_robot && !could_make_clay_robot {
+        let enough_clay_robots = self.clay_robots >= blueprint.obsidian_robot_clay_cost;
+        if can_make_clay_robot && !could_make_clay_robot && !enough_clay_robots {
             let mut new_state = self.tick();
             new_state.clay_robots += 1;
             new_state.ore -= blueprint.clay_robot_ore_cost;
@@ -145,7 +146,11 @@ impl State {
         }
 
         let can_make_ore_robot = self.ore >= blueprint.ore_robot_ore_cost;
-        if can_make_ore_robot && !could_make_ore_robot {
+        let enough_ore_robots = self.ore_robots >= blueprint.ore_robot_ore_cost
+            && self.ore_robots >= blueprint.clay_robot_ore_cost
+            && self.ore_robots >= blueprint.obsidian_robot_ore_cost
+            && self.ore_robots >= blueprint.geode_robot_ore_cost;
+        if can_make_ore_robot && !could_make_ore_robot && !enough_ore_robots {
             let mut new_state = self.tick();
             new_state.ore -= blueprint.ore_robot_ore_cost;
             new_state.ore_robots += 1;
