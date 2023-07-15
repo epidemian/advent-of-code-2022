@@ -65,14 +65,13 @@ impl State {
     }
 
     fn tick(&self) -> State {
-        State {
-            ore: self.ore + self.ore_robots,
-            clay: self.clay + self.clay_robots,
-            obsidian: self.obsidian + self.obsidian_robots,
-            geodes: self.geodes + self.geode_robots,
-            remaining_minutes: self.remaining_minutes - 1,
-            ..*self
-        }
+        let mut next = State { ..*self };
+        next.ore += self.ore_robots;
+        next.clay += self.clay_robots;
+        next.obsidian += self.obsidian_robots;
+        next.geodes += self.geode_robots;
+        next.remaining_minutes -= 1;
+        next
     }
 }
 
