@@ -125,3 +125,7 @@ The interesting pruning "optimizations" were:
 - Not building robots of a certain type if there's already enough of them to build wny robot we want on a single turn. This doesn't apply to geode-cracking robots, obviously, since we always want more of those. And it doesn't apply to obsidian robots either, but only because in the 32 simulated minutes, we don't reach any state where this condition of producing enough obsidian to build a geode robot per minute is met. It is applied to ore and clay robots though, and it made a huge difference in the final runtime, lowering it from ~0.5s to ~15ms :)
 
 Besides that, this was also a fun challenge of algorithmic modelling. I started doing a depth-first search in a recursive fashion. But after reaching an efficient implementation that way, i rewrote that main search function to use a classic DFS imperative loop and a reified stack variable, and i liked the result much better. The recursive version needed quite a bit of parameters to pass between one state and the next, while the imperative version can just use local variables for that, which i think is easier to keep track of.
+
+### Day 20: Grove Positioning System
+
+This one had a pretty easy part 1 followed by a part 2 that made the simple approach on part 1 totally unfeasible. Luckily, with a modular arithmetic trick, part 2 became achievable, and after some tweaking and optimization using a sort of doubly-linked list i managed to a fast enough runtime.
