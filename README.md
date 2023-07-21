@@ -129,3 +129,7 @@ Besides that, this was also a fun challenge of algorithmic modelling. I started 
 ### Day 20: Grove Positioning System
 
 This one had a pretty easy part 1 followed by a part 2 that made the simple approach on part 1 totally unfeasible. Luckily, with a modular arithmetic trick, part 2 became achievable, and after some tweaking and optimization using a sort of doubly-linked list i managed to a fast enough runtime.
+
+### Day 21: Monkey Math
+
+A challenging part 2. I used a recursive function that "solves" a given "variable" (monkey name) up the chain of uses until it reaches the root monkey.
