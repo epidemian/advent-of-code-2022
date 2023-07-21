@@ -93,42 +93,42 @@ fn solve_for(var_id: MonkeyId, monkeys: &HashMap<MonkeyId, MonkeyJob>) -> i64 {
         _ => None,
     });
 
-    let Some((use_id, op, lhs, rhs)) = var_uses.next() else {
+    let Some((def_id, op, lhs, rhs)) = var_uses.next() else {
         panic!("found no uses of {var_id:?}")
     };
 
     if let Some((other_use_id, ..)) = var_uses.next() {
-        panic!("found more than one use of {var_id:?}: used in {use_id:?} and {other_use_id:?}")
+        panic!("found more than one use of {var_id:?}: used in {def_id:?} and {other_use_id:?}")
     }
 
-    assert!(lhs != rhs, "variable {var_id:?} used twice in {use_id:?}");
+    assert!(lhs != rhs, "variable {var_id:?} used twice in {def_id:?}");
 
-    if *use_id == parse_id("root") {
+    if *def_id == parse_id("root") {
         // When we reach the root equation our var_id must be equal to the other operand.
         let other = if *lhs == var_id { rhs } else { lhs };
         return eval(*other, monkeys);
     }
 
-    let use_id_res = solve_for(*use_id, monkeys);
+    let def_res = solve_for(*def_id, monkeys);
 
     // Solve the math equation depending on whether our "variable" is the LHS or the RHS
     if var_id == *lhs {
-        // use_id = var_id <op> rhs
+        // def = var <op> rhs
         let rhs_res = eval(*rhs, monkeys);
         match *op {
-            Op::Add => use_id_res - rhs_res,
-            Op::Sub => use_id_res + rhs_res,
-            Op::Mul => use_id_res / rhs_res,
-            Op::Div => use_id_res * rhs_res,
+            Op::Add => def_res - rhs_res,
+            Op::Sub => def_res + rhs_res,
+            Op::Mul => def_res / rhs_res,
+            Op::Div => def_res * rhs_res,
         }
     } else {
-        // use_id = lhs <op> var_id
+        // def = lhs <op> var
         let lhs_res = eval(*lhs, monkeys);
         match *op {
-            Op::Add => use_id_res - lhs_res,
-            Op::Sub => lhs_res - use_id_res,
-            Op::Mul => use_id_res / lhs_res,
-            Op::Div => lhs_res / use_id_res,
+            Op::Add => def_res - lhs_res,
+            Op::Sub => lhs_res - def_res,
+            Op::Mul => def_res / lhs_res,
+            Op::Div => lhs_res / def_res,
         }
     }
 }
