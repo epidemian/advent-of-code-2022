@@ -114,7 +114,6 @@ const RIGHT: (i32, i32) = (1, 0);
 const DOWN: (i32, i32) = (0, 1);
 const LEFT: (i32, i32) = (-1, 0);
 const UP: (i32, i32) = (0, -1);
-const FACE_SIDE: i32 = 50;
 
 fn turn_left(x: i32, y: i32) -> (i32, i32) {
     (y, -x)
@@ -125,12 +124,17 @@ fn turn_right(x: i32, y: i32) -> (i32, i32) {
 }
 
 // x and y should be in 0..FACE_SIZE
-fn turn_right_in_face(x: i32, y: i32) -> (i32, i32) {
+fn turn_right_in_face(x: i32, y: i32, cube_size: i32) -> (i32, i32) {
     let (new_x, new_y) = turn_right(x, y);
-    (new_x + FACE_SIDE - 1, new_y)
+    (new_x + cube_size - 1, new_y)
 }
 
 fn try_advance_part_2(x: i32, y: i32, dx: i32, dy: i32, map: &Map) -> Option<(i32, i32, i32, i32)> {
+    let is_sample = map.len() < 50;
+    if is_sample {
+        todo!("implement generic solution that works for sample input");
+    }
+    let cube_size = if is_sample { 4 } else { 50 };
     let mut new_x = x + dx;
     let mut new_y = y + dy;
     let mut new_dx = dx;
@@ -138,7 +142,7 @@ fn try_advance_part_2(x: i32, y: i32, dx: i32, dy: i32, map: &Map) -> Option<(i3
 
     let mut tile = get_tile_non_wrapping(new_x, new_y, map);
     if tile == Empty {
-        let face = CUBE_MAP[y as usize / 50].as_bytes()[x as usize / 50] as char;
+        let face = CUBE_MAP[(y / cube_size) as usize].as_bytes()[(x / cube_size) as usize] as char;
         let (new_face, new_dir) = match (face, (dx, dy)) {
             ('U', UP) => ('B', RIGHT),
             ('B', DOWN) => ('R', DOWN),
@@ -156,17 +160,17 @@ fn try_advance_part_2(x: i32, y: i32, dx: i32, dy: i32, map: &Map) -> Option<(i3
             ('D', DOWN) => ('B', LEFT),
             _ => panic!("i don't know how to go from face {face} in direction {dx},{dy}"),
         };
-        let mut x_mod = (x + dx).rem_euclid(50);
-        let mut y_mod = (y + dy).rem_euclid(50);
+        let mut x_mod = (x + dx).rem_euclid(cube_size);
+        let mut y_mod = (y + dy).rem_euclid(cube_size);
         let mut dir = (dx, dy);
         while dir != new_dir {
-            (x_mod, y_mod) = turn_right_in_face(x_mod, y_mod);
+            (x_mod, y_mod) = turn_right_in_face(x_mod, y_mod, cube_size);
             dir = turn_right(dir.0, dir.1);
         }
 
         let (face_x, face_y) = get_cube_face_pos(new_face);
-        new_x = face_x + x_mod;
-        new_y = face_y + y_mod;
+        new_x = face_x * cube_size + x_mod;
+        new_y = face_y * cube_size + y_mod;
         (new_dx, new_dy) = new_dir;
         tile = get_tile_non_wrapping(new_x, new_y, map)
     }
@@ -184,7 +188,7 @@ fn get_cube_face_pos(face: char) -> (i32, i32) {
         .find_map(|(y, line)| {
             line.chars().enumerate().find_map(|(x, ch)| {
                 if ch == face {
-                    Some((x as i32 * 50, y as i32 * 50))
+                    Some((x as i32, y as i32))
                 } else {
                     None
                 }
