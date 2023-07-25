@@ -5,99 +5,100 @@ pub fn run(input: &str) -> String {
     let map = parse_map(map_part);
     let instructions = parse_instructions(inst_part);
 
-    let ans_1 = part_1(&map, &instructions);
-    let ans_2 = part_2(&map, &instructions);
+    let ans_1 = get_password(&map, &instructions, false);
+    let ans_2 = get_password(&map, &instructions, true);
 
     format!("{ans_1} {ans_2}")
 }
 
-fn part_1(map: &Map, instructions: &[Instruction]) -> i32 {
-    let mut x = map[0]
+#[derive(Copy, Clone, PartialEq)]
+enum Tile {
+    Empty,
+    Open,
+    Wall,
+}
+use Tile::*;
+
+enum Instruction {
+    TurnLeft,
+    TurnRight,
+    Advance(u32),
+}
+use Instruction::*;
+
+type Map = Vec<Vec<Tile>>;
+type Point = (i32, i32);
+
+const RIGHT: Point = (1, 0);
+const DOWN: Point = (0, 1);
+const LEFT: Point = (-1, 0);
+const UP: Point = (0, -1);
+
+fn get_password(map: &Map, instructions: &[Instruction], as_3d_cube: bool) -> i32 {
+    let start_x = map[0]
         .iter()
         .position(|tile| matches!(tile, Open))
         .expect("first row should have an open tile") as i32;
-    let mut y = 0;
-    let mut dx = 1;
-    let mut dy = 0;
+    let mut pos = (start_x, 0);
+    let mut dir = RIGHT;
     for ins in instructions.iter() {
         match ins {
-            TurnLeft => (dx, dy) = (dy, -dx),
-            TurnRight => (dx, dy) = (-dy, dx),
+            TurnLeft => dir = turn_left(dir),
+            TurnRight => dir = turn_right(dir),
             Advance(n) => {
                 for _ in 0..*n {
-                    let Some((new_x, new_y)) = try_advance(x, y, dx, dy, &map) else {
+                    let Some((new_pos, new_dir)) = try_advance(pos, dir, &map, as_3d_cube) else {
                         break
                     };
-                    (x, y) = (new_x, new_y);
+                    pos = new_pos;
+                    dir = new_dir;
                 }
             }
         }
     }
 
-    let dir_num = match (dx, dy) {
+    let dir_num = match dir {
         RIGHT => 0,
         DOWN => 1,
         LEFT => 2,
         UP => 3,
         dir => unreachable!("unexpected final direction {dir:?}"),
     };
+    let (x, y) = pos;
     1000 * (y + 1) + 4 * (x + 1) + dir_num
 }
 
-fn part_2(map: &Map, instructions: &[Instruction]) -> i32 {
-    let mut x = map[0]
-        .iter()
-        .position(|tile| matches!(tile, Open))
-        .expect("first row should have an open tile") as i32;
-    let mut y = 0;
-    let mut dx = 1;
-    let mut dy = 0;
-    for ins in instructions.iter() {
-        match ins {
-            TurnLeft => (dx, dy) = turn_left(dx, dy),
-            TurnRight => (dx, dy) = turn_right(dx, dy),
-            Advance(n) => {
-                for _ in 0..*n {
-                    let Some((new_x, new_y, new_dx, new_dy)) = try_advance_part_2(x, y, dx, dy, &map) else {
-                        break
-                    };
-                    (x, y) = (new_x, new_y);
-                    (dx, dy) = (new_dx, new_dy);
-                }
-            }
-        }
-    }
+fn try_advance(pos: Point, dir: Point, map: &Map, as_3d_cube: bool) -> Option<(Point, Point)> {
+    let mut new_pos = point_add(pos, dir);
+    let mut new_dir = dir;
 
-    let dir_num = match (dx, dy) {
-        RIGHT => 0,
-        DOWN => 1,
-        LEFT => 2,
-        UP => 3,
-        dir => unreachable!("unexpected final direction {dir:?}"),
-    };
-    1000 * (y + 1) + 4 * (x + 1) + dir_num
-}
-
-fn try_advance(x: i32, y: i32, dx: i32, dy: i32, map: &Map) -> Option<(i32, i32)> {
-    let mut new_x = x + dx;
-    let mut new_y = y + dy;
-    let mut tile = get_tile_non_wrapping(new_x, new_y, map);
+    let mut tile = get_tile_non_wrapping(new_pos, map);
     if tile == Empty {
-        // Wrap around going in the opposite direction until we go out of bounds.
-        loop {
-            let backward_tile = get_tile_non_wrapping(new_x - dx, new_y - dy, map);
-            if backward_tile == Empty {
-                break;
-            };
-            tile = backward_tile;
-            new_x -= dx;
-            new_y -= dy;
+        if as_3d_cube {
+            (new_pos, new_dir, tile) = wrap_around_3d_cube(pos, dir, map);
+        } else {
+            (new_pos, tile) = wrap_around_2d(pos, dir, map);
         }
     }
     if tile == Wall {
         None
     } else {
-        Some((new_x, new_y))
+        Some((new_pos, new_dir))
+    }
+}
+
+fn wrap_around_2d(pos: Point, dir: Point, map: &Map) -> (Point, Tile) {
+    let mut pos = pos;
+    let mut tile = Empty;
+    // Wrap around going in the opposite direction until we go out of bounds.
+    loop {
+        let back_pos = point_sub(pos, dir);
+        let back_tile = get_tile_non_wrapping(back_pos, map);
+        if back_tile == Empty {
+            return (pos, tile);
+        };
+        tile = back_tile;
+        pos = back_pos;
     }
 }
 
@@ -110,116 +111,89 @@ const CUBE_MAP: [&str; 4] = [
     "B  "
 ];
 
-const RIGHT: (i32, i32) = (1, 0);
-const DOWN: (i32, i32) = (0, 1);
-const LEFT: (i32, i32) = (-1, 0);
-const UP: (i32, i32) = (0, -1);
-
-fn turn_left(x: i32, y: i32) -> (i32, i32) {
-    (y, -x)
-}
-
-fn turn_right(x: i32, y: i32) -> (i32, i32) {
-    (-y, x)
-}
-
-// x and y should be in 0..FACE_SIZE
-fn turn_right_in_face(x: i32, y: i32, cube_size: i32) -> (i32, i32) {
-    let (new_x, new_y) = turn_right(x, y);
-    (new_x + cube_size - 1, new_y)
-}
-
-fn try_advance_part_2(x: i32, y: i32, dx: i32, dy: i32, map: &Map) -> Option<(i32, i32, i32, i32)> {
+fn wrap_around_3d_cube(pos: Point, dir: Point, map: &Map) -> (Point, Point, Tile) {
     let is_sample = map.len() < 50;
     if is_sample {
         todo!("implement generic solution that works for sample input");
     }
     let cube_size = if is_sample { 4 } else { 50 };
-    let mut new_x = x + dx;
-    let mut new_y = y + dy;
-    let mut new_dx = dx;
-    let mut new_dy = dy;
 
-    let mut tile = get_tile_non_wrapping(new_x, new_y, map);
-    if tile == Empty {
-        let face = CUBE_MAP[(y / cube_size) as usize].as_bytes()[(x / cube_size) as usize] as char;
-        let (new_face, new_dir) = match (face, (dx, dy)) {
-            ('U', UP) => ('B', RIGHT),
-            ('B', DOWN) => ('R', DOWN),
-            ('R', UP) => ('B', UP),
-            ('B', RIGHT) => ('D', UP),
-            ('D', RIGHT) => ('R', LEFT),
-            ('R', RIGHT) => ('D', LEFT),
-            ('B', LEFT) => ('U', DOWN),
-            ('U', LEFT) => ('L', RIGHT),
-            ('L', UP) => ('F', RIGHT),
-            ('L', LEFT) => ('U', RIGHT),
-            ('R', DOWN) => ('F', LEFT),
-            ('F', LEFT) => ('L', DOWN),
-            ('F', RIGHT) => ('R', UP),
-            ('D', DOWN) => ('B', LEFT),
-            _ => panic!("i don't know how to go from face {face} in direction {dx},{dy}"),
-        };
-        let mut x_mod = (x + dx).rem_euclid(cube_size);
-        let mut y_mod = (y + dy).rem_euclid(cube_size);
-        let mut dir = (dx, dy);
-        while dir != new_dir {
-            (x_mod, y_mod) = turn_right_in_face(x_mod, y_mod, cube_size);
-            dir = turn_right(dir.0, dir.1);
+    let (x, y) = pos;
+    let face = CUBE_MAP[(y / cube_size) as usize].as_bytes()[(x / cube_size) as usize] as char;
+
+    // These particular face transitions are specific to my input's cube unfolding.
+    let (new_face, new_dir) = match (face, dir) {
+        ('U', UP) => ('B', RIGHT),
+        ('B', LEFT) => ('U', DOWN),
+        ('U', LEFT) => ('L', RIGHT),
+        ('L', LEFT) => ('U', RIGHT),
+        ('R', UP) => ('B', UP),
+        ('B', DOWN) => ('R', DOWN),
+        ('R', RIGHT) => ('D', LEFT),
+        ('D', RIGHT) => ('R', LEFT),
+        ('R', DOWN) => ('F', LEFT),
+        ('F', RIGHT) => ('R', UP),
+        ('F', LEFT) => ('L', DOWN),
+        ('L', UP) => ('F', RIGHT),
+        ('D', DOWN) => ('B', LEFT),
+        ('B', RIGHT) => ('D', UP),
+        _ => panic!("unexpected transition from face {face} in direction {dir:?}"),
+    };
+
+    let mut pos_in_face = point_mod(point_add(pos, dir), cube_size);
+    let mut d = dir;
+    while d != new_dir {
+        pos_in_face = turn_right_in_face(pos_in_face, cube_size);
+        d = turn_right(d);
+    }
+
+    let face_pos = get_cube_face_pos(new_face, cube_size);
+    let new_pos = point_add(face_pos, pos_in_face);
+    let tile = get_tile_non_wrapping(new_pos, map);
+    (new_pos, new_dir, tile)
+}
+
+fn turn_left((x, y): Point) -> Point {
+    (y, -x)
+}
+
+fn turn_right((x, y): Point) -> Point {
+    (-y, x)
+}
+
+fn point_add((x1, y1): Point, (x2, y2): Point) -> Point {
+    (x1 + x2, y1 + y2)
+}
+
+fn point_sub((x1, y1): Point, (x2, y2): Point) -> Point {
+    (x1 - x2, y1 - y2)
+}
+
+fn point_mod((x, y): Point, rhs: i32) -> Point {
+    (x.rem_euclid(rhs), y.rem_euclid(rhs))
+}
+
+// x and y should be in 0..cube_size
+fn turn_right_in_face((x, y): Point, cube_size: i32) -> Point {
+    (cube_size - 1 - y, x)
+}
+
+fn get_cube_face_pos(face: char, cube_size: i32) -> Point {
+    for (y, line) in CUBE_MAP.iter().enumerate() {
+        for (x, ch) in line.chars().enumerate() {
+            if ch == face {
+                return (x as i32 * cube_size, y as i32 * cube_size);
+            }
         }
-
-        let (face_x, face_y) = get_cube_face_pos(new_face);
-        new_x = face_x * cube_size + x_mod;
-        new_y = face_y * cube_size + y_mod;
-        (new_dx, new_dy) = new_dir;
-        tile = get_tile_non_wrapping(new_x, new_y, map)
     }
-    if tile == Wall {
-        None
-    } else {
-        Some((new_x, new_y, new_dx, new_dy))
-    }
+    unreachable!("could not find face '{face}' in cube map");
 }
 
-fn get_cube_face_pos(face: char) -> (i32, i32) {
-    CUBE_MAP
-        .iter()
-        .enumerate()
-        .find_map(|(y, line)| {
-            line.chars().enumerate().find_map(|(x, ch)| {
-                if ch == face {
-                    Some((x as i32, y as i32))
-                } else {
-                    None
-                }
-            })
-        })
-        .expect("could not find face in cube map")
-}
-
-fn get_tile_non_wrapping(x: i32, y: i32, map: &Vec<Vec<Tile>>) -> Tile {
+fn get_tile_non_wrapping((x, y): Point, map: &Map) -> Tile {
     *map.get(y as usize)
         .and_then(|row| row.get(x as usize))
         .unwrap_or(&Empty)
 }
-
-#[derive(Copy, Clone, PartialEq)]
-enum Tile {
-    Empty,
-    Open,
-    Wall,
-}
-
-use Tile::*;
-
-enum Instruction {
-    TurnLeft,
-    TurnRight,
-    Advance(u32),
-}
-use Instruction::*;
-
-type Map = Vec<Vec<Tile>>;
 
 fn parse_map(s: &str) -> Map {
     s.lines()
