@@ -23,6 +23,7 @@ mod day_19_not_enough_minerals;
 mod day_20_grove_positioning_system;
 mod day_21_monkey_math;
 mod day_22_monkey_map;
+mod day_23_unstable_diffusion;
 mod dijkstra;
 
 fn main() -> ExitCode {
@@ -50,6 +51,7 @@ fn main() -> ExitCode {
         day_20_grove_positioning_system::run,
         day_21_monkey_math::run,
         day_22_monkey_map::run,
+        day_23_unstable_diffusion::run,
     ];
 
     let run_single_day = |day_num: usize| {

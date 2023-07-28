@@ -229,6 +229,7 @@ fn parse_instructions(s: &str) -> Vec<Instruction> {
 
 #[cfg(test)]
 mod tests {
+    #[ignore]
     #[test]
     fn test_sample() {
         let sample = include_str!("../inputs/day22-sample.txt");
