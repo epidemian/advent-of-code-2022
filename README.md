@@ -133,3 +133,9 @@ This one had a pretty easy part 1 followed by a part 2 that made the simple appr
 ### Day 21: Monkey Math
 
 A challenging part 2. I used a recursive function that "solves" a given "variable" (monkey name) up the chain of uses until it reaches the root monkey.
+
+### Day 22: Monkey Map
+
+Maddeningly hard part 2. I ended doing an ad-hoc solution for the particular cube unfolding shape of my input.
+
+Learned something new about Rust: you can declare an immutable variable and initialize later. This can be useful, for example, when you want to assign the variable in different branches of an `if` or `match`. Rush checks that the variable is always assigned, and only once :)
