@@ -139,3 +139,7 @@ A challenging part 2. I used a recursive function that "solves" a given "variabl
 Maddeningly hard part 2. I ended doing an ad-hoc solution for the particular cube unfolding shape of my input.
 
 Learned something new about Rust: you can declare an immutable variable and initialize later. This can be useful, for example, when you want to assign the variable in different branches of an `if` or `match`. Rush checks that the variable is always assigned, and only once :)
+
+### Day 23: Unstable Diffusion
+
+Kind of a breather after the previous one. Part 1 was a relatively simple cellular automaton-ish simulation. And part 2 was trivial to do after having part 1. Initially i ended up with a "slow" runtime of ~1s, but after changing the main HashSet for elves' positions to a direct-access 2D grid, the runtime dropped to an acceptable ~150ms.
