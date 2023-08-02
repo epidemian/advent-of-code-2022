@@ -36,9 +36,7 @@ pub fn run(input: &str) -> String {
                     let dst = (x.wrapping_add_signed(dx), y.wrapping_add_signed(dy));
                     proposed_moves
                         .entry(dst)
-                        // If there's already another elf wanting to move to this destination, don't
-                        // consider either of those moves.
-                        .and_modify(|m| *m = Err(()))
+                        .and_modify(|m| *m = Err(TooManyElves))
                         .or_insert(Ok(elf_index));
                     break;
                 }
@@ -78,6 +76,7 @@ pub fn run(input: &str) -> String {
 }
 
 type Map = Vec<Vec<bool>>;
+struct TooManyElves;
 
 fn parse_input(input: &str) -> (Vec<(usize, usize)>, Map) {
     let input_size = input.lines().count();
