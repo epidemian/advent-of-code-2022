@@ -143,3 +143,9 @@ Learned something new about Rust: you can declare an immutable variable and init
 ### Day 23: Unstable Diffusion
 
 Kind of a breather after the previous one. Part 1 was a relatively simple cellular automaton-ish simulation. And part 2 was trivial to do after having part 1. Initially i ended up with a "slow" runtime of ~1s, but after changing the main HashSet for elves' positions to a direct-access 2D grid, the runtime dropped to an acceptable ~150ms.
+
+### Day 24: Blizzard Basin
+
+Pretty fun challenge. I'm glad for having realized that you don't really need to simulate all blizzards moving around the map, and instead can determine if a tile has a blizzard at a given time from the starting map alone by doing some simple modular arithmetic.
+
+I'm impressed by how expressive Rust closures can be, without having to worry about memory management or unnecessary allocations. The closure used for the next moves' calculation in the Dijkstra's algorithm looks quite dynamic, but it's actually all stack values that get copied around; no dynamic heap allocations :)

@@ -9,42 +9,42 @@ pub fn run(input: &str) -> String {
     format!("{first_trip_time} {back_to_end_time}")
 }
 
-// Note: `start` and `end` may be off-bounds by one.
+// `start` and `end` can be off-bounds by one.
 fn shortest_travel_time(map: &Map, start: Point, end: Point, start_time: i32) -> i32 {
-    let neighbors = |&((x, y), t): &_| {
+    let next_moves = |&((x, y), t): &_| {
+        // Note: include current (x, y) as a possible move for waiting a turn.
         [(x + 1, y), (x, y + 1), (x, y), (x, y - 1), (x - 1, y)]
             .into_iter()
-            .filter(|&(x, y)| {
-                let in_bounds = x >= 0 && x < map[0].len() as i32 && y >= 0 && y < map.len() as i32;
-                in_bounds || (x, y) == start || (x, y) == end
-            })
             .filter(move |&(x, y)| {
-                (x, y) == start || (x, y) == end || tile_is_empty_at(map, x, y, t + 1)
+                let start_or_end = (x, y) == start || (x, y) == end;
+                let in_bounds = x >= 0 && x < map[0].len() as i32 && y >= 0 && y < map.len() as i32;
+                start_or_end || (in_bounds && tile_is_empty_at(map, x, y, t + 1))
             })
             .map(move |pos| (pos, t + 1))
     };
-    let dist = shortest_path(&(start, start_time), |&(pos, _t)| pos == end, neighbors)
+    let dist = shortest_path(&(start, start_time), |&(pos, _t)| pos == end, next_moves)
         .expect("there must be a path from start to end");
     dist as i32 + start_time
 }
 
-fn tile_is_empty_at(map: &Map, x: i32, y: i32, t: i32) -> bool {
+// Determines whether an (x, y) tile has no blizzards at a given time. x and y must be in-bounds.
+fn tile_is_empty_at(map: &Map, x: i32, y: i32, time: i32) -> bool {
     let width = map[0].len() as i32;
     let height = map.len() as i32;
 
-    // The tile at (x, y) is not empty if there is an up-moving blizzard `t` rows below (wrapping
+    // The tile at (x, y) is not empty if there is an up-moving blizzard `time` rows below (wrapping
     // around).
-    if let Tile::Up = map[(y + t).rem_euclid(height) as usize][x as usize] {
+    if let UpBlizzard = map[(y + time).rem_euclid(height) as usize][x as usize] {
         return false;
     }
-    // And do a similar check for all other directions.
-    if let Tile::Down = map[(y - t).rem_euclid(height) as usize][x as usize] {
+    // And do a similar check for all other directions...
+    if let DownBlizzard = map[(y - time).rem_euclid(height) as usize][x as usize] {
         return false;
     }
-    if let Tile::Left = map[y as usize][(x + t).rem_euclid(width) as usize] {
+    if let LeftBlizzard = map[y as usize][(x + time).rem_euclid(width) as usize] {
         return false;
     }
-    if let Tile::Right = map[y as usize][(x - t).rem_euclid(width) as usize] {
+    if let RightBlizzard = map[y as usize][(x - time).rem_euclid(width) as usize] {
         return false;
     }
     true
@@ -52,11 +52,12 @@ fn tile_is_empty_at(map: &Map, x: i32, y: i32, t: i32) -> bool {
 
 enum Tile {
     Empty,
-    Up,
-    Down,
-    Left,
-    Right,
+    UpBlizzard,
+    DownBlizzard,
+    LeftBlizzard,
+    RightBlizzard,
 }
+use Tile::*;
 
 type Map = Vec<Vec<Tile>>;
 type Point = (i32, i32);
@@ -80,11 +81,11 @@ fn parse_map(input: &str) -> (Map, Point, Point) {
             line.trim_matches('#')
                 .chars()
                 .map(|ch| match ch {
-                    '.' => Tile::Empty,
-                    '^' => Tile::Up,
-                    'v' => Tile::Down,
-                    '<' => Tile::Left,
-                    '>' => Tile::Right,
+                    '.' => Empty,
+                    '^' => UpBlizzard,
+                    'v' => DownBlizzard,
+                    '<' => LeftBlizzard,
+                    '>' => RightBlizzard,
                     _ => unreachable!("unexpected character '{ch}'"),
                 })
                 .collect()
