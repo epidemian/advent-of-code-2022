@@ -47,7 +47,7 @@ fn get_password(map: &Map, instructions: &[Instruction], as_3d_cube: bool) -> i3
             TurnRight => dir = turn_right(dir),
             Advance(n) => {
                 for _ in 0..*n {
-                    let Some((new_pos, new_dir)) = try_advance(pos, dir, &map, as_3d_cube) else {
+                    let Some((new_pos, new_dir)) = try_advance(pos, dir, map, as_3d_cube) else {
                         break
                     };
                     pos = new_pos;

@@ -22,7 +22,7 @@ fn mix(numbers: &[i64], mix_count: usize) -> i64 {
 
     for _ in 0..mix_count {
         for id in 0..len {
-            let num = numbers[id as usize];
+            let num = numbers[id];
 
             // Skip unnecessary "laps" around the list by taking the reminder.
             let mut moves = num % (len - 1) as i64;

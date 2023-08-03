@@ -76,7 +76,7 @@ fn parse_map(input: &str) -> (Map, Point, Point) {
     });
 
     let map: Map = middle_lines
-        .into_iter()
+        .iter()
         .map(|line| {
             line.trim_matches('#')
                 .chars()
