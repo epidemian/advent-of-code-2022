@@ -1,4 +1,4 @@
-use crate::dijkstra::shortest_path_distances;
+use crate::dijkstra::shortest_path;
 use std::{collections::HashMap, mem};
 
 // Note: this solution was ~stolen from~ heavily inspired by
@@ -8,9 +8,15 @@ pub fn run(input: &str) -> String {
     let distances = graph
         .keys()
         .map(|id| {
-            let mut dists =
-                shortest_path_distances(id, |id| graph[id].connected_valves.iter().cloned());
-            dists.retain(|other_id, _dist| other_id != id && graph[other_id].flow_rate > 0);
+            let dists = graph
+                .iter()
+                .filter(|&(other_id, valve)| other_id != id && valve.flow_rate > 0)
+                .map(|(other_id, _v)| {
+                    let successors = |id: &_| graph[id].connected_valves.iter().cloned();
+                    let d = shortest_path(id, |id| id == other_id, successors).unwrap();
+                    (*other_id, d)
+                })
+                .collect();
             (*id, dists)
         })
         .collect();
@@ -123,4 +129,24 @@ fn parse_graph(input: &str) -> HashMap<ValveId, Valve> {
 fn parse_valve_id(s: &str) -> ValveId {
     let bytes = s.as_bytes();
     (bytes[0], bytes[1])
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_sample() {
+        assert_eq!(super::run(SAMPLE), "1651 1707")
+    }
+    const SAMPLE: &str = "\
+Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
+Valve BB has flow rate=13; tunnels lead to valves CC, AA
+Valve CC has flow rate=2; tunnels lead to valves DD, BB
+Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
+Valve EE has flow rate=3; tunnels lead to valves FF, DD
+Valve FF has flow rate=0; tunnels lead to valves EE, GG
+Valve GG has flow rate=0; tunnels lead to valves FF, HH
+Valve HH has flow rate=22; tunnel leads to valve GG
+Valve II has flow rate=0; tunnels lead to valves AA, JJ
+Valve JJ has flow rate=21; tunnel leads to valve II
+";
 }

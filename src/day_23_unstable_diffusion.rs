@@ -108,9 +108,9 @@ fn parse_input(input: &str) -> (Vec<(usize, usize)>, Map) {
 mod tests {
     #[test]
     fn test_sample() {
-        assert_eq!(super::run(SAMPLE.trim()), "110 20")
+        assert_eq!(super::run(SAMPLE), "110 20")
     }
-    const SAMPLE: &str = "
+    const SAMPLE: &str = "\
 ....#..
 ..###.#
 #...#.#

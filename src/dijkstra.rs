@@ -2,10 +2,13 @@ use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::hash::Hash;
 
-// Calculates the shortest path distances starting from a given node using Dijkstra's algorithm.
-pub fn shortest_path_distances<T, FT, IT>(start: &T, successors: FT) -> HashMap<T, usize>
+// Calculates the shortest path distance between a given start node and a goal using Dijkstra's
+// algorithm. The goal is given as a predicate function instead of a node so that the caller can
+// determine when it is reached.
+pub fn shortest_path<T, PT, FT, IT>(start: &T, is_goal: PT, successors: FT) -> Option<usize>
 where
     T: Eq + Hash + Clone,
+    PT: Fn(&T) -> bool,
     FT: Fn(&T) -> IT,
     IT: IntoIterator<Item = T>,
 {
@@ -21,46 +24,7 @@ where
     while let Some(min_dist_node) = unvisited.pop() {
         let Node { value, distance } = min_dist_node;
 
-        if distances[&value] < distance {
-            continue;
-        }
-
-        for succ in successors(&value) {
-            let path_dist = distance + 1;
-            if path_dist < *distances.get(&succ).unwrap_or(&usize::MAX) {
-                distances.insert(succ.clone(), path_dist);
-                unvisited.push(Node {
-                    value: succ,
-                    distance: path_dist,
-                });
-            }
-        }
-    }
-
-    distances
-}
-
-// Calculates the shortest path between two nodes using Dijkstra's algorithm.
-pub fn shortest_path<T, P, FT, IT>(start: &T, end_pred: P, successors: FT) -> Option<usize>
-where
-    T: Eq + Hash + Clone,
-    P: Fn(&T) -> bool,
-    FT: Fn(&T) -> IT,
-    IT: IntoIterator<Item = T>,
-{
-    let mut unvisited = BinaryHeap::new();
-    let mut distances = HashMap::new();
-
-    distances.insert(start.clone(), 0);
-    unvisited.push(Node {
-        value: start.clone(),
-        distance: 0,
-    });
-
-    while let Some(min_dist_node) = unvisited.pop() {
-        let Node { value, distance } = min_dist_node;
-
-        if end_pred(&value) {
+        if is_goal(&value) {
             return Some(distance);
         }
 

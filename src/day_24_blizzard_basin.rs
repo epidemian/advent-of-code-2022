@@ -1,35 +1,31 @@
-use crate::dijkstra;
+use crate::dijkstra::shortest_path;
 
 pub fn run(input: &str) -> String {
     let (map, start, end) = parse_map(input);
-    let first_trip_time = shortest_path(&map, start, end, 0);
-    let mut total_time = first_trip_time;
-    total_time += shortest_path(&map, end, start, total_time as i32);
-    total_time += shortest_path(&map, start, end, total_time as i32);
+    let first_trip_time = shortest_travel_time(&map, start, end, 0);
+    let back_to_start_time = shortest_travel_time(&map, end, start, first_trip_time);
+    let back_to_end_time = shortest_travel_time(&map, start, end, back_to_start_time);
 
-    format!("{first_trip_time} {total_time}")
+    format!("{first_trip_time} {back_to_end_time}")
 }
 
 // Note: `start` and `end` may be off-bounds by one.
-fn shortest_path(map: &Map, start: Point, end: Point, start_time: i32) -> usize {
-    dijkstra::shortest_path(
-        &(start, start_time),
-        |&(pos, _t)| pos == end,
-        |&((x, y), t)| {
-            [(x + 1, y), (x, y + 1), (x, y), (x, y - 1), (x - 1, y)]
-                .into_iter()
-                .filter(|&(x, y)| {
-                    let in_bounds =
-                        x >= 0 && x < map[0].len() as i32 && y >= 0 && y < map.len() as i32;
-                    in_bounds || (x, y) == start || (x, y) == end
-                })
-                .filter(move |&(x, y)| {
-                    (x, y) == start || (x, y) == end || tile_is_empty_at(map, x, y, t + 1)
-                })
-                .map(move |pos| (pos, t + 1))
-        },
-    )
-    .expect("there must be a path from start to end")
+fn shortest_travel_time(map: &Map, start: Point, end: Point, start_time: i32) -> i32 {
+    let neighbors = |&((x, y), t): &_| {
+        [(x + 1, y), (x, y + 1), (x, y), (x, y - 1), (x - 1, y)]
+            .into_iter()
+            .filter(|&(x, y)| {
+                let in_bounds = x >= 0 && x < map[0].len() as i32 && y >= 0 && y < map.len() as i32;
+                in_bounds || (x, y) == start || (x, y) == end
+            })
+            .filter(move |&(x, y)| {
+                (x, y) == start || (x, y) == end || tile_is_empty_at(map, x, y, t + 1)
+            })
+            .map(move |pos| (pos, t + 1))
+    };
+    let dist = shortest_path(&(start, start_time), |&(pos, _t)| pos == end, neighbors)
+        .expect("there must be a path from start to end");
+    dist as i32 + start_time
 }
 
 fn tile_is_empty_at(map: &Map, x: i32, y: i32, t: i32) -> bool {
@@ -105,9 +101,9 @@ fn parse_map(input: &str) -> (Map, Point, Point) {
 mod tests {
     #[test]
     fn test_sample() {
-        assert_eq!(super::run(SAMPLE.trim()), "18 54")
+        assert_eq!(super::run(SAMPLE), "18 54")
     }
-    const SAMPLE: &str = "
+    const SAMPLE: &str = "\
 #.######
 #>>.<^<#
 #.<..<<#
