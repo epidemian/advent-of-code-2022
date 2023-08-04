@@ -47,8 +47,6 @@ fn num_to_snafu(n: i64) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::day_25_full_of_hot_air::parse_snafu;
-
     #[test]
     fn test_sample() {
         assert_eq!(super::run(SAMPLE), "2=-1=0")
@@ -70,34 +68,27 @@ mod tests {
 ";
 
     #[test]
-    fn snafu_to_num() {
-        for &(n, snafu) in BROCHURE_NUMS.iter() {
-            assert_eq!(n, parse_snafu(snafu))
+    fn brochure_sample_numbers() {
+        let nums = [
+            (1, "1"),
+            (2, "2"),
+            (3, "1="),
+            (4, "1-"),
+            (5, "10"),
+            (6, "11"),
+            (7, "12"),
+            (8, "2="),
+            (9, "2-"),
+            (10, "20"),
+            (15, "1=0"),
+            (20, "1-0"),
+            (2022, "1=11-2"),
+            (12345, "1-0---0"),
+            (314159265, "1121-1110-1=0"),
+        ];
+        for &(n, snafu) in nums.iter() {
+            assert_eq!(n, super::parse_snafu(snafu));
+            assert_eq!(snafu, super::num_to_snafu(n));
         }
     }
-
-    #[test]
-    fn num_to_snafu() {
-        for &(n, snafu) in BROCHURE_NUMS.iter() {
-            assert_eq!(snafu, super::num_to_snafu(n))
-        }
-    }
-
-    const BROCHURE_NUMS: &[(i64, &str)] = &[
-        (1, "1"),
-        (2, "2"),
-        (3, "1="),
-        (4, "1-"),
-        (5, "10"),
-        (6, "11"),
-        (7, "12"),
-        (8, "2="),
-        (9, "2-"),
-        (10, "20"),
-        (15, "1=0"),
-        (20, "1-0"),
-        (2022, "1=11-2"),
-        (12345, "1-0---0"),
-        (314159265, "1121-1110-1=0"),
-    ];
 }

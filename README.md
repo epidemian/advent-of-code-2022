@@ -149,3 +149,7 @@ Kind of a breather after the previous one. Part 1 was a relatively simple cellul
 Pretty fun challenge. I'm glad for having realized that you don't really need to simulate all blizzards moving around the map, and instead can determine if a tile has a blizzard at a given time from the starting map alone by doing some simple modular arithmetic.
 
 I'm impressed by how expressive Rust closures can be, without having to worry about memory management or unnecessary allocations. The closure used for the next moves' calculation in the Dijkstra's algorithm looks quite dynamic, but it's actually all stack values that get copied around; no dynamic heap allocations :)
+
+### Day 25: Full of Hot Air
+
+Relatively simple puzzle for last day. The conversion from integers to the weird SNAFU numbers was a bit tricky, but could finally get it working after some trial and error.
