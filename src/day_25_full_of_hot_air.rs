@@ -1,7 +1,6 @@
 pub fn run(input: &str) -> String {
     let total = input.lines().map(parse_snafu).sum();
-    let snafu_total = num_to_snafu(total);
-    format!("{snafu_total}")
+    num_to_snafu(total)
 }
 
 fn parse_snafu(s: &str) -> i64 {
@@ -22,8 +21,8 @@ fn parse_snafu(s: &str) -> i64 {
     res
 }
 
-// This function doesn't work for negative numbers.
 fn num_to_snafu(n: i64) -> String {
+    assert!(n >= 0, "This function doesn't work for negative numbers");
     let mut n = n;
     let mut digits = vec![];
     if n == 0 {
@@ -32,15 +31,14 @@ fn num_to_snafu(n: i64) -> String {
     while n != 0 {
         let rem = (n + 2) % 5;
         n = (n + 2) / 5;
-        let snafu_digit = match rem - 2 {
+        digits.push(match rem - 2 {
             -2 => '=',
             -1 => '-',
             0 => '0',
             1 => '1',
             2 => '2',
             _ => unreachable!("i done goofed"),
-        };
-        digits.push(snafu_digit);
+        });
     }
     digits.into_iter().rev().collect()
 }
