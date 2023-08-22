@@ -1,5 +1,7 @@
 use crate::dijkstra::shortest_path;
-use std::{collections::HashMap, mem};
+use fxhash::FxHashMap as HashMap;
+use rayon::prelude::*;
+use std::mem;
 
 // Note: this solution was ~stolen from~ heavily inspired by
 // https://old.reddit.com/r/adventofcode/comments/zn6k1l/2022_day_16_solutions/j2xhog7/
@@ -38,20 +40,22 @@ pub fn run(input: &str) -> String {
     };
 
     let start_valve = (b'A', b'A');
-    let mut part_1_max_pressures = HashMap::new();
+    let mut part_1_max_pressures = HashMap::default();
     visit_all_paths(&ctx, start_valve, 30, 0, 0, &mut part_1_max_pressures);
     let part_1_ans = part_1_max_pressures.values().max().unwrap();
 
-    let mut part_2_max_pressures = HashMap::new();
+    let mut part_2_max_pressures = HashMap::default();
     visit_all_paths(&ctx, start_valve, 26, 0, 0, &mut part_2_max_pressures);
-    let mut part_2_ans = 0;
-    for (bitmask_1, pressure_1) in part_2_max_pressures.iter() {
-        for (bitmask_2, pressure_2) in part_2_max_pressures.iter() {
-            if (bitmask_1 & bitmask_2) == 0 {
-                part_2_ans = part_2_ans.max(pressure_1 + pressure_2)
-            }
-        }
-    }
+    let part_2_ans = part_2_max_pressures
+        .par_iter()
+        .flat_map(|(bitmask_1, pressure_1)| {
+            part_2_max_pressures
+                .par_iter()
+                .filter(move |&(bitmask_2, _pressure_2)| (bitmask_1 & bitmask_2) == 0)
+                .map(move |(_bitmask_2, pressure_2)| pressure_1 + pressure_2)
+        })
+        .max()
+        .unwrap_or(0);
 
     format!("{part_1_ans} {part_2_ans}")
 }
