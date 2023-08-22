@@ -1,6 +1,8 @@
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::BinaryHeap;
 use std::hash::Hash;
+
+use fxhash::FxHashMap as HashMap;
 
 // Calculates the shortest path distance between a given start node and a goal using Dijkstra's
 // algorithm. The goal is given as a predicate function instead of a node so that the caller can
@@ -13,7 +15,7 @@ where
     IT: IntoIterator<Item = T>,
 {
     let mut unvisited = BinaryHeap::new();
-    let mut distances = HashMap::new();
+    let mut distances = HashMap::default();
 
     distances.insert(start.clone(), 0);
     unvisited.push(Node {
