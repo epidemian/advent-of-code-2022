@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use rayon::prelude::*;
+
 pub fn run(input: &str) -> String {
     let mut sensors = parse_sensors(input);
     sensors.sort_by_key(|s| s.position.0);
@@ -56,15 +58,15 @@ fn excluded_positions_count_at_row(sensors: &[Sensor], y: i64) -> i64 {
 
 fn find_distress_signal_beacon(sensors: &[Sensor]) -> Option<Point> {
     let size = 4_000_000;
-    for y in 0..=size {
+    (0..=size).into_par_iter().find_map_any(|y| {
         let segments = get_contiguous_exclusion_row_segments(sensors, y);
         let &(_start_x, end_x) = segments.first().expect("at least one segment expected");
 
         if end_x < size {
             return Some((end_x + 1, y));
         }
-    }
-    None
+        None
+    })
 }
 
 // Assumes sensors are sorted by x coordinate.
