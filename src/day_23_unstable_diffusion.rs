@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use fxhash::FxHashMap as HashMap;
 
 pub fn run(input: &str) -> String {
     let (mut elves, mut map) = parse_input(input);
@@ -17,8 +17,8 @@ pub fn run(input: &str) -> String {
 
     let mut empty_tiles_at_round_10 = 0;
     let mut round = 0;
+    let mut proposed_moves = HashMap::default();
     loop {
-        let mut proposed_moves = HashMap::new();
         for (elf_index, (x, y)) in elves.iter().enumerate() {
             let empty_dirs = directions.map(|dirs| {
                 dirs.iter()
@@ -70,6 +70,8 @@ pub fn run(input: &str) -> String {
         if proposed_moves.is_empty() {
             break;
         }
+
+        proposed_moves.clear();
     }
 
     format!("{empty_tiles_at_round_10} {round}")
