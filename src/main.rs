@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::{env, fs, process::ExitCode, time};
 
 mod day_01_calorie_counting;
@@ -65,22 +66,28 @@ fn main() -> ExitCode {
             Ok(input) => {
                 let output = days[day_num - 1](&input);
                 let time_annotation = format_time_annotation(instant.elapsed());
-                println!("Day {day_num}{time_annotation}: {output}");
-                Ok(())
+                Ok(format!("Day {day_num}{time_annotation}: {output}"))
             }
-            Err(err) => {
-                eprintln!("Error reading {filename}: {err}");
-                Err(())
-            }
+            Err(err) => Err(format!("Error reading {filename}: {err}")),
         }
+    };
+    let print_day_result = |result: &_| match result {
+        Ok(output) => println!("{output}"),
+        Err(err_output) => eprintln!("{err_output}"),
     };
 
     match args.len() {
         1 => {
-            for day_num in 1..=days.len() {
-                if run_single_day(day_num).is_err() {
+            let results: Vec<_> = (1..=days.len())
+                .into_par_iter()
+                .map(|day_num| run_single_day(day_num))
+                .collect();
+
+            for result in results {
+                print_day_result(&result);
+                if result.is_err() {
                     return ExitCode::FAILURE;
-                };
+                }
             }
         }
         2 => {
@@ -93,7 +100,9 @@ fn main() -> ExitCode {
                 return ExitCode::FAILURE;
             }
 
-            if run_single_day(day_num).is_err() {
+            let result = run_single_day(day_num);
+            print_day_result(&result);
+            if result.is_err() {
                 return ExitCode::FAILURE;
             };
         }

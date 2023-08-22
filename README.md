@@ -12,6 +12,7 @@ I recorded myself solving these puzzles to try to maintain focus and finish them
 - Read inputs from files (or stdin); don't include their contents into the executable
 - (optional) Better error handling
 - (optional) Use vanilla Rust; no external dependencies
+  - Except for Rayon, which is awesome :)
 
 ## Notes & Learnings
 
