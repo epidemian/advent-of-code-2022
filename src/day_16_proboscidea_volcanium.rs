@@ -36,18 +36,12 @@ pub fn run(input: &str) -> String {
         })
         .collect();
 
-    let ctx = Context {
-        valves,
-        distances,
-        valve_bitmasks,
-    };
-
-    let mut part_1_max_pressures = HashMap::default();
-    visit_all_paths(&ctx, start_valve_id, 30, 0, 0, &mut part_1_max_pressures);
+    let part_1_max_pressures =
+        visit_all_paths(start_valve_id, 30, &valves, &distances, &valve_bitmasks);
     let part_1_ans = part_1_max_pressures.values().max().unwrap();
 
-    let mut part_2_max_pressures = HashMap::default();
-    visit_all_paths(&ctx, start_valve_id, 26, 0, 0, &mut part_2_max_pressures);
+    let part_2_max_pressures =
+        visit_all_paths(start_valve_id, 26, &valves, &distances, &valve_bitmasks);
     let part_2_ans = part_2_max_pressures
         .par_iter()
         .flat_map(|(bitmask_1, pressure_1)| {
@@ -72,44 +66,41 @@ struct Valve {
     connected_valves: Vec<ValveId>,
 }
 
-// Bunch up some structures to avoid passing too many parameters around.
-struct Context {
-    valves: Vec<Valve>,
-    distances: Vec<Vec<(ValveId, usize)>>,
-    valve_bitmasks: Vec<Bitmask>,
-}
-
 fn visit_all_paths(
-    ctx: &Context,
-    current_valve: ValveId,
-    remaining_minutes: u64,
-    open_valves_bitmask: Bitmask,
-    released_pressure: u64,
-    max_released_pressure: &mut HashMap<Bitmask, u64>,
-) {
-    let max_val = max_released_pressure
-        .entry(open_valves_bitmask)
-        .or_insert(0);
-    if released_pressure > *max_val {
-        *max_val = released_pressure;
+    initial_valve: ValveId,
+    total_minutes: u64,
+    valves: &Vec<Valve>,
+    distances: &Vec<Vec<(ValveId, usize)>>,
+    valve_bitmasks: &Vec<Bitmask>,
+) -> HashMap<Bitmask, u64> {
+    let mut max_pressures = HashMap::default();
+    let mut stack = vec![(initial_valve, total_minutes, 0, 0)];
+
+    while let Some(state) = stack.pop() {
+        let (current_valve, remaining_minutes, open_valves_bitmask, released_pressure) = state;
+
+        let max_val = max_pressures.entry(open_valves_bitmask).or_insert(0);
+        if released_pressure > *max_val {
+            *max_val = released_pressure;
+        }
+
+        for &(other_valve, dist) in distances[current_valve].iter() {
+            let not_enough_time = dist as u64 + 1 > remaining_minutes;
+            let already_open = valve_bitmasks[other_valve] & open_valves_bitmask != 0;
+            if not_enough_time || already_open {
+                continue;
+            }
+            let new_remaining_minutes = remaining_minutes - dist as u64 - 1;
+            stack.push((
+                other_valve,
+                new_remaining_minutes,
+                open_valves_bitmask | valve_bitmasks[other_valve],
+                released_pressure + new_remaining_minutes * valves[other_valve].flow_rate,
+            ));
+        }
     }
 
-    for &(other_valve, dist) in ctx.distances[current_valve].iter() {
-        let not_enough_time = dist as u64 + 1 > remaining_minutes;
-        let already_open = ctx.valve_bitmasks[other_valve] & open_valves_bitmask != 0;
-        if not_enough_time || already_open {
-            continue;
-        }
-        let new_remaining_minutes = remaining_minutes - dist as u64 - 1;
-        visit_all_paths(
-            ctx,
-            other_valve,
-            new_remaining_minutes,
-            open_valves_bitmask | ctx.valve_bitmasks[other_valve],
-            released_pressure + new_remaining_minutes * ctx.valves[other_valve].flow_rate,
-            max_released_pressure,
-        )
-    }
+    max_pressures
 }
 
 fn parse_valves(input: &str) -> (Vec<Valve>, ValveId) {
