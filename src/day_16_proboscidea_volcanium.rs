@@ -95,18 +95,18 @@ fn visit_all_paths(
     }
 
     for &(other_valve, dist) in ctx.distances[current_valve].iter() {
-        if dist as u64 + 1 > remaining_minutes
-            || (ctx.valve_bitmasks[other_valve] & open_valves_bitmask) != 0
-        {
+        let not_enough_time = dist as u64 + 1 > remaining_minutes;
+        let already_open = ctx.valve_bitmasks[other_valve] & open_valves_bitmask != 0;
+        if not_enough_time || already_open {
             continue;
         }
-        let remaining_minutes = remaining_minutes - dist as u64 - 1;
+        let new_remaining_minutes = remaining_minutes - dist as u64 - 1;
         visit_all_paths(
             ctx,
             other_valve,
-            remaining_minutes,
+            new_remaining_minutes,
             open_valves_bitmask | ctx.valve_bitmasks[other_valve],
-            released_pressure + remaining_minutes * ctx.valves[other_valve].flow_rate,
+            released_pressure + new_remaining_minutes * ctx.valves[other_valve].flow_rate,
             max_released_pressure,
         )
     }
