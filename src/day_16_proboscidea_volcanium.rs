@@ -7,34 +7,32 @@ use std::mem;
 // https://old.reddit.com/r/adventofcode/comments/zn6k1l/2022_day_16_solutions/j2xhog7/
 pub fn run(input: &str) -> String {
     let (valves, start_valve_id) = parse_valves(input);
-    let distances = valves
+
+    let working_valves: Vec<_> = valves
+        .iter()
+        .filter(|valve| valve.flow_rate > 0)
+        .map(|valve| valve.id)
+        .collect();
+
+    let distances: Vec<Vec<_>> = valves
         .iter()
         .map(|valve| {
-            valves
+            working_valves
                 .iter()
-                .filter(|&other_valve| other_valve.id != valve.id && other_valve.flow_rate > 0)
-                .map(|other_valve| {
+                .map(|&other_id| {
                     let successors = |&id: &ValveId| valves[id].connected_valves.iter().cloned();
-                    let d =
-                        shortest_path(&valve.id, |&id| id == other_valve.id, successors).unwrap();
-                    (other_valve.id, d)
+                    let d = shortest_path(&valve.id, |&id| id == other_id, successors).unwrap();
+                    (other_id, d)
                 })
                 .collect()
         })
         .collect();
 
-    let mut bit_index = 0;
-    let valve_bitmasks = valves
-        .iter()
-        .map(|valve| {
-            if valve.flow_rate == 0 {
-                return 0;
-            }
-            assert!(bit_index < BITMASK_BITS, "too many valves for bitmask size");
-            bit_index += 1;
-            1 << (bit_index - 1)
-        })
-        .collect();
+    let mut valve_bitmasks = vec![0; valves.len()];
+    for (bit_index, id) in working_valves.iter().enumerate() {
+        assert!(bit_index < BITMASK_BITS, "too many valves for bitmask size");
+        valve_bitmasks[*id] = 1 << bit_index;
+    }
 
     let part_1_max_pressures =
         visit_all_paths(start_valve_id, 30, &valves, &distances, &valve_bitmasks);
@@ -69,9 +67,9 @@ struct Valve {
 fn visit_all_paths(
     initial_valve: ValveId,
     total_minutes: u64,
-    valves: &Vec<Valve>,
-    distances: &Vec<Vec<(ValveId, usize)>>,
-    valve_bitmasks: &Vec<Bitmask>,
+    valves: &[Valve],
+    distances: &[Vec<(ValveId, usize)>],
+    valve_bitmasks: &[Bitmask],
 ) -> HashMap<Bitmask, u64> {
     let mut max_pressures = HashMap::default();
     let mut stack = vec![(initial_valve, total_minutes, 0, 0)];
@@ -80,9 +78,7 @@ fn visit_all_paths(
         let (current_valve, remaining_minutes, open_valves_bitmask, released_pressure) = state;
 
         let max_val = max_pressures.entry(open_valves_bitmask).or_insert(0);
-        if released_pressure > *max_val {
-            *max_val = released_pressure;
-        }
+        *max_val = (*max_val).max(released_pressure);
 
         for &(other_valve, dist) in distances[current_valve].iter() {
             let not_enough_time = dist as u64 + 1 > remaining_minutes;
