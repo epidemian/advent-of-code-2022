@@ -1,7 +1,6 @@
 use crate::dijkstra::shortest_path;
-use fxhash::FxHashMap as HashMap;
 use rayon::prelude::*;
-use std::mem;
+use std::{collections::HashMap, mem};
 
 // Note: this solution was ~stolen from~ heavily inspired by
 // https://old.reddit.com/r/adventofcode/comments/zn6k1l/2022_day_16_solutions/j2xhog7/
@@ -36,7 +35,7 @@ pub fn run(input: &str) -> String {
 
     let part_1_max_pressures =
         visit_all_paths(start_valve_id, 30, &valves, &distances, &valve_bitmasks);
-    let part_1_ans = part_1_max_pressures.values().max().unwrap();
+    let part_1_ans = part_1_max_pressures.iter().map(|(_b, p)| p).max().unwrap();
 
     let part_2_max_pressures =
         visit_all_paths(start_valve_id, 26, &valves, &distances, &valve_bitmasks);
@@ -70,14 +69,14 @@ fn visit_all_paths(
     valves: &[Valve],
     distances: &[Vec<(ValveId, usize)>],
     valve_bitmasks: &[Bitmask],
-) -> HashMap<Bitmask, u64> {
-    let mut max_pressures = HashMap::default();
+) -> Vec<(Bitmask, u64)> {
+    let mut max_pressures = vec![0; 1 << BITMASK_BITS];
     let mut stack = vec![(initial_valve, total_minutes, 0, 0)];
 
     while let Some(state) = stack.pop() {
         let (current_valve, remaining_minutes, open_valves_bitmask, released_pressure) = state;
 
-        let max_val = max_pressures.entry(open_valves_bitmask).or_insert(0);
+        let max_val = &mut max_pressures[open_valves_bitmask as usize];
         *max_val = (*max_val).max(released_pressure);
 
         for &(other_valve, dist) in distances[current_valve].iter() {
@@ -97,6 +96,11 @@ fn visit_all_paths(
     }
 
     max_pressures
+        .iter()
+        .enumerate()
+        .filter(|&(_i, pressure)| *pressure > 0)
+        .map(|(i, pressure)| (i as Bitmask, *pressure))
+        .collect()
 }
 
 fn parse_valves(input: &str) -> (Vec<Valve>, ValveId) {
