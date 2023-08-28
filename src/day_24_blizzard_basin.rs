@@ -97,19 +97,3 @@ fn parse_map(input: &str) -> (Map, Point, Point) {
 
     (map, start, end)
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_sample() {
-        assert_eq!(super::run(SAMPLE), "18 54")
-    }
-    const SAMPLE: &str = "\
-#.######
-#>>.<^<#
-#.<..<<#
-#>v.><>#
-#<^v^^>#
-######.#
-";
-}

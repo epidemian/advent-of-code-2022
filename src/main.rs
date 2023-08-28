@@ -28,6 +28,7 @@ mod day_23_unstable_diffusion;
 mod day_24_blizzard_basin;
 mod day_25_full_of_hot_air;
 mod dijkstra;
+mod sample_tests;
 
 fn main() -> ExitCode {
     let args: Vec<_> = env::args().collect();
@@ -93,7 +94,7 @@ fn main() -> ExitCode {
         2 => {
             let Ok(day_num) = args[1].parse::<usize>() else {
                 eprintln!("Invalid day number");
-                return ExitCode::FAILURE
+                return ExitCode::FAILURE;
             };
             if day_num < 1 || day_num > days.len() {
                 eprintln!("Day number out of range");

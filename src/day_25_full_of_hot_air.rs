@@ -46,26 +46,6 @@ fn num_to_snafu(n: i64) -> String {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_sample() {
-        assert_eq!(super::run(SAMPLE), "2=-1=0")
-    }
-    const SAMPLE: &str = "\
-1=-0-2
-12111
-2=0=
-21
-2=01
-111
-20012
-112
-1=-1=
-1-12
-12
-1=
-122
-";
-
-    #[test]
     fn brochure_sample_numbers() {
         let nums = [
             (1, "1"),

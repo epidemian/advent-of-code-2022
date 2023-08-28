@@ -48,7 +48,7 @@ fn get_password(map: &Map, instructions: &[Instruction], as_3d_cube: bool) -> i3
             Advance(n) => {
                 for _ in 0..*n {
                     let Some((new_pos, new_dir)) = try_advance(pos, dir, map, as_3d_cube) else {
-                        break
+                        break;
                     };
                     pos = new_pos;
                     dir = new_dir;
@@ -225,14 +225,4 @@ fn parse_instructions(s: &str) -> Vec<Instruction> {
             }
         })
         .collect()
-}
-
-#[cfg(test)]
-mod tests {
-    #[ignore]
-    #[test]
-    fn test_sample() {
-        let sample = include_str!("../inputs/day22-sample.txt");
-        assert_eq!(super::run(sample), "6032")
-    }
 }

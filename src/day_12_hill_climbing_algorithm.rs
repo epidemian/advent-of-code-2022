@@ -59,18 +59,3 @@ fn parse_input(input: &str) -> (Vec<Vec<u8>>, Point, Point) {
 fn map_points_iter(width: usize, height: usize) -> impl Iterator<Item = Point> {
     (0..height).flat_map(move |y| (0..width).map(move |x| (x, y)))
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_sample() {
-        assert_eq!(super::run(SAMPLE), "31 29")
-    }
-    const SAMPLE: &str = "\
-Sabqponm
-abcryxxl
-accszExk
-acctuvwj
-abdefghi
-";
-}

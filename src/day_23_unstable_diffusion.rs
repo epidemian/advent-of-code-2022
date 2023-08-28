@@ -105,20 +105,3 @@ fn parse_input(input: &str) -> (Vec<(usize, usize)>, Map) {
 
     (elves, map)
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_sample() {
-        assert_eq!(super::run(SAMPLE), "110 20")
-    }
-    const SAMPLE: &str = "\
-....#..
-..###.#
-#...#.#
-.#...##
-#.###..
-##.#.##
-.#..#..
-";
-}
