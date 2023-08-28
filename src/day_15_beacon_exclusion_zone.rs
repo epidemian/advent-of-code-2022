@@ -6,10 +6,14 @@ pub fn run(input: &str) -> String {
     let mut sensors = parse_sensors(input);
     sensors.sort_by_key(|s| s.position.0);
 
-    let excluded_positions_count = excluded_positions_count_at_row(&sensors, 2_000_000);
+    let is_sample = sensors.len() < 20;
+    let row = if is_sample { 10 } else { 2_000_000 };
+    let size = if is_sample { 20 } else { 4_000_000 };
+
+    let excluded_positions_count = excluded_positions_count_at_row(&sensors, row);
 
     let (beacon_x, beacon_y) =
-        find_distress_signal_beacon(&sensors).expect("distress signal beacon not found");
+        find_distress_signal_beacon(&sensors, size).expect("distress signal beacon not found");
     let tuning_frequency = beacon_x * 4_000_000 + beacon_y;
 
     format!("{excluded_positions_count} {tuning_frequency}",)
@@ -56,8 +60,7 @@ fn excluded_positions_count_at_row(sensors: &[Sensor], y: i64) -> i64 {
     end - start + 1 - row_beacons.len() as i64
 }
 
-fn find_distress_signal_beacon(sensors: &[Sensor]) -> Option<Point> {
-    let size = 4_000_000;
+fn find_distress_signal_beacon(sensors: &[Sensor], size: i64) -> Option<Point> {
     (0..=size).into_par_iter().find_map_any(|y| {
         let segments = get_contiguous_exclusion_row_segments(sensors, y);
         let &(_start_x, end_x) = segments.first().expect("at least one segment expected");
@@ -82,7 +85,7 @@ fn get_contiguous_exclusion_row_segments(sensors: &[Sensor], y: i64) -> Vec<(i64
         let mut end = sx + d;
 
         while let Some(&(last_start, last_end)) = segments.last() {
-            if start > last_end || end < last_start {
+            if start > last_end + 1 {
                 // Doesn't overlap with last segment.
                 break;
             }

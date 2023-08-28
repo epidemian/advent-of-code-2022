@@ -22,15 +22,13 @@ pub fn run(input: &str) -> String {
     for y in 0..6 {
         for x in 0..40 {
             let sprite_x = x_values_by_cycle[y * 40 + x];
-            let pixel = if (sprite_x - x as i32).abs() <= 1 {
-                '#'
-            } else {
-                ' '
-            };
+            let in_sprite = (sprite_x - x as i32).abs() <= 1;
+            let pixel = if in_sprite { '#' } else { '.' };
             crt_image.push(pixel);
         }
         crt_image.push('\n');
     }
+    let crt_image = crt_image.trim_end();
 
     format!("{signal_strengths_sum}\n{crt_image}")
 }
