@@ -62,7 +62,7 @@ fn main() -> ExitCode {
 
     let run_single_day = |day_num: usize| {
         let instant = time::Instant::now();
-        let filename = format!("inputs/day{day_num:02}.txt");
+        let filename = format!("inputs/{day_num:02}.txt");
         match fs::read_to_string(&filename) {
             Ok(input) => {
                 let output = days[day_num - 1](&input);
