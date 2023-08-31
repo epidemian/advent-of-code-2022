@@ -75,10 +75,12 @@ fn try_advance(pos: Point, dir: Point, map: &Map, as_3d_cube: bool) -> Option<(P
     let mut tile = get_tile_non_wrapping(new_pos, map);
     if tile == Empty {
         if as_3d_cube {
-            (new_pos, new_dir, tile) = wrap_around_3d_cube(pos, dir, map);
+            (new_pos, new_dir) = wrap_around_3d_cube(pos, dir, map);
         } else {
-            (new_pos, tile) = wrap_around_2d(pos, dir, map);
+            new_pos = wrap_around_2d(pos, dir, map);
         }
+        tile = get_tile_non_wrapping(new_pos, map);
+        assert!(tile != Empty)
     }
     if tile == Wall {
         None
@@ -87,17 +89,14 @@ fn try_advance(pos: Point, dir: Point, map: &Map, as_3d_cube: bool) -> Option<(P
     }
 }
 
-fn wrap_around_2d(pos: Point, dir: Point, map: &Map) -> (Point, Tile) {
+fn wrap_around_2d(pos: Point, dir: Point, map: &Map) -> Point {
     let mut pos = pos;
-    let mut tile = Empty;
     // Wrap around going in the opposite direction until we go out of bounds.
     loop {
         let back_pos = point_sub(pos, dir);
-        let back_tile = get_tile_non_wrapping(back_pos, map);
-        if back_tile == Empty {
-            return (pos, tile);
+        if get_tile_non_wrapping(back_pos, map) == Empty {
+            return pos;
         };
-        tile = back_tile;
         pos = back_pos;
     }
 }
@@ -111,7 +110,7 @@ const CUBE_MAP: [&str; 4] = [
     "B  "
 ];
 
-fn wrap_around_3d_cube(pos: Point, dir: Point, map: &Map) -> (Point, Point, Tile) {
+fn wrap_around_3d_cube(pos: Point, dir: Point, map: &Map) -> (Point, Point) {
     let is_sample = map.len() < 50;
     if is_sample {
         todo!("implement generic solution that works for sample input");
@@ -149,8 +148,7 @@ fn wrap_around_3d_cube(pos: Point, dir: Point, map: &Map) -> (Point, Point, Tile
 
     let face_pos = get_cube_face_pos(new_face, cube_size);
     let new_pos = point_add(face_pos, pos_in_face);
-    let tile = get_tile_non_wrapping(new_pos, map);
-    (new_pos, new_dir, tile)
+    (new_pos, new_dir)
 }
 
 fn turn_left((x, y): Point) -> Point {
