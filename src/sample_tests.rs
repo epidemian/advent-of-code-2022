@@ -26,7 +26,7 @@ mod tests {
     #[test] fn day_19_not_enough_minerals_sample() { run_sample_test(day_19_not_enough_minerals::run, "./samples/19.txt") }
     #[test] fn day_20_grove_positioning_system_sample() { run_sample_test(day_20_grove_positioning_system::run, "./samples/20.txt") }
     #[test] fn day_21_monkey_math_sample() { run_sample_test(day_21_monkey_math::run, "./samples/21.txt") }
-    #[ignore] #[test] fn day_22_monkey_map_sample() { run_sample_test(day_22_monkey_map::run, "./samples/22.txt") }
+    #[test] fn day_22_monkey_map_sample() { run_sample_test(day_22_monkey_map::run, "./samples/22.txt") }
     #[test] fn day_23_unstable_diffusion_sample() { run_sample_test(day_23_unstable_diffusion::run, "./samples/23.txt") }
     #[test] fn day_24_blizzard_basin_sample() { run_sample_test(day_24_blizzard_basin::run, "./samples/24.txt") }
     #[test] fn day_25_full_of_hot_air_sample() { run_sample_test(day_25_full_of_hot_air::run, "./samples/25.txt") }

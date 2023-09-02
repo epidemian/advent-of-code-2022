@@ -38,9 +38,8 @@ fn main() {
             let Some(mod_name) = mod_names_by_day.get(&day_num) else {
                 panic!("could not find module to run sample {day_num}")
             };
-            let ignore_attr = if day_num == 22 { "#[ignore] " } else { "" };
             format!(
-                "    {ignore_attr}#[test] fn {mod_name}_{test_name}() {{ run_sample_test({mod_name}::run, \"{path}\") }}",
+                "    #[test] fn {mod_name}_{test_name}() {{ run_sample_test({mod_name}::run, \"{path}\") }}",
                 path=path.display()
             )
         })
