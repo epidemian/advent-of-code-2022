@@ -142,6 +142,8 @@ Maddeningly hard part 2. I ended doing an ad-hoc solution for the particular cub
 
 Learned something new about Rust: you can declare an immutable variable and initialize later. This can be useful, for example, when you want to assign the variable in different branches of an `if` or `match`. Rush checks that the variable is always assigned, and only once :)
 
+Update: found a general solution that also works on the sample input. Lots of tricky modular math and rotations involved. But less single-purpose hardcoding :D
+
 ### Day 23: Unstable Diffusion
 
 Kind of a breather after the previous one. Part 1 was a relatively simple cellular automaton-ish simulation. And part 2 was trivial to do after having part 1. Initially i ended up with a "slow" runtime of ~1s, but after changing the main HashSet for elves' positions to a direct-access 2D grid, the runtime dropped to an acceptable ~150ms.
@@ -155,3 +157,13 @@ I'm impressed by how expressive Rust closures can be, without having to worry ab
 ### Day 25: Full of Hot Air
 
 Relatively simple puzzle for last day. The conversion from integers to the weird SNAFU numbers was a bit tricky, but could finally get it working after some trial and error.
+
+### Sample unit tests
+
+I wanted to try out some data-driven testing using the daily puzzles sample inputs.
+
+Each file on the [samples](samples) directory contains both the sample input for that day as well as the expected answer. A build script on [`build.rs`](build.rs) generates a unit test for each of those sample files every time something changes on that directory. These unit tests check that running the daily solution against the sample input generates the expected answer.
+
+It's a pity that Rust doesn't provide a built-in way of adding unit tests cases dynamically at runtime. If it did so, this build script would be unnecessary, and the overall complexity of this approach would be diminished. But since the only built-in way of adding a unit test case is using the `#[test]` attribute, this can only be done statically. A proc-macro could have been used for generating this code at compile-time, or an external crate (which use proc-macros) such as [datatest-stable](https://docs.rs/datatest-stable/latest/datatest_stable/), but a build script that just generates the test code from strings seemed way easier.
+
+Another option could have been using a different test harness altogether. One that allows interfacing dynamically with it and generating test cases from your code, such as [libetest-mimic](https://docs.rs/libtest-mimic/latest/libtest_mimic/). But i preferred to avoid adding yet another external library, and also deviating from the default test runner.
