@@ -7,8 +7,8 @@ pub fn run(input: &str) -> String {
     let map = parse_map(map_part);
     let instructions = parse_instructions(inst_part);
 
-    let ans_1 = get_password(&map, &instructions, false);
-    let ans_2 = get_password(&map, &instructions, true);
+    let ans_1 = get_password(&map, &instructions, wrap_around_2d);
+    let ans_2 = get_password(&map, &instructions, wrap_around_3d_cube);
 
     format!("{ans_1} {ans_2}")
 }
@@ -30,6 +30,7 @@ use Instruction::*;
 
 type Map = Vec<Vec<Tile>>;
 type Point = (i32, i32);
+type WrapFn = fn(pos: Point, dir: Point, map: &Map) -> (Point, Point);
 
 const RIGHT: Point = (1, 0);
 const DOWN: Point = (0, 1);
@@ -37,7 +38,7 @@ const LEFT: Point = (-1, 0);
 const UP: Point = (0, -1);
 const DIRECTIONS: [Point; 4] = [RIGHT, DOWN, LEFT, UP];
 
-fn get_password(map: &Map, instructions: &[Instruction], as_3d_cube: bool) -> i32 {
+fn get_password(map: &Map, instructions: &[Instruction], wrap_fn: WrapFn) -> i32 {
     let start_x = map[0]
         .iter()
         .position(|tile| matches!(tile, Open))
@@ -50,7 +51,7 @@ fn get_password(map: &Map, instructions: &[Instruction], as_3d_cube: bool) -> i3
             TurnRight => dir = turn_right(dir),
             Advance(n) => {
                 for _ in 0..*n {
-                    let Some((new_pos, new_dir)) = try_advance(pos, dir, map, as_3d_cube) else {
+                    let Some((new_pos, new_dir)) = try_advance(pos, dir, map, wrap_fn) else {
                         break;
                     };
                     pos = new_pos;
@@ -71,17 +72,13 @@ fn dir_to_rot(dir: Point) -> usize {
     index
 }
 
-fn try_advance(pos: Point, dir: Point, map: &Map, as_3d_cube: bool) -> Option<(Point, Point)> {
+fn try_advance(pos: Point, dir: Point, map: &Map, wrap_fn: WrapFn) -> Option<(Point, Point)> {
     let mut new_pos = point_add(pos, dir);
     let mut new_dir = dir;
 
     let mut tile = get_tile_non_wrapping(new_pos, map);
     if tile == Empty {
-        if as_3d_cube {
-            (new_pos, new_dir) = wrap_around_3d_cube(pos, dir, map);
-        } else {
-            new_pos = wrap_around_2d(pos, dir, map);
-        }
+        (new_pos, new_dir) = wrap_fn(pos, dir, map);
         tile = get_tile_non_wrapping(new_pos, map);
         assert!(tile != Empty)
     }
@@ -92,13 +89,13 @@ fn try_advance(pos: Point, dir: Point, map: &Map, as_3d_cube: bool) -> Option<(P
     }
 }
 
-fn wrap_around_2d(pos: Point, dir: Point, map: &Map) -> Point {
+fn wrap_around_2d(pos: Point, dir: Point, map: &Map) -> (Point, Point) {
     let mut pos = pos;
     // Wrap around going in the opposite direction until we go out of bounds.
     loop {
         let back_pos = point_sub(pos, dir);
         if get_tile_non_wrapping(back_pos, map) == Empty {
-            return pos;
+            return (pos, dir);
         };
         pos = back_pos;
     }
