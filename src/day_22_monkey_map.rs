@@ -107,8 +107,8 @@ fn wrap_around_2d(pos: Point, dir: Point, map: &Map) -> Point {
 fn wrap_around_3d_cube(pos: Point, dir: Point, map: &Map) -> (Point, Point) {
     let is_sample = map.len() < 50;
     let cube_size = if is_sample { 4 } else { 50 };
-    // Note: `faces` could be pre-computed, as it's always the same value for the same map. But this
-    // is not a perf bottleneck.
+    // Note: these faces could be pre-computed, as it's always the same value for the same map. But
+    // this is not a perf bottleneck.
     let faces = get_cube_faces(map, cube_size);
 
     let (x, y) = pos;
@@ -119,11 +119,11 @@ fn wrap_around_3d_cube(pos: Point, dir: Point, map: &Map) -> (Point, Point) {
     let face_rot = faces[face_index].1;
 
     let next_face = FACE_CONNECTIONS[face_index][(dir_to_rot(dir) + face_rot) % 4];
-    let (next_face_pos, next_face_rot) = faces[next_face as usize];
+    let (next_face_pos, next_face_rot) = faces[next_face];
 
-    let rot_from_next_face = FACE_CONNECTIONS[next_face as usize]
+    let rot_from_next_face = FACE_CONNECTIONS[next_face]
         .iter()
-        .position(|f| *f as usize == face_index)
+        .position(|f| *f == face_index)
         .unwrap();
     let new_dir = DIRECTIONS[(rot_from_next_face + 2 + 4 - next_face_rot) % 4];
     let mut d = dir;
@@ -137,46 +137,46 @@ fn wrap_around_3d_cube(pos: Point, dir: Point, map: &Map) -> (Point, Point) {
     (new_pos, new_dir)
 }
 
-#[rustfmt::skip]
-#[derive(Copy, Clone, PartialEq)]
-enum Face { F = 0, U, R, B, D, L }
-
-const FACE_CONNECTIONS: [[Face; 4]; 6] = {
-    use Face::*;
+// Note: these 4-neighbor arrays can start from any face; only their clockwise order matters.
+const FACE_CONNECTIONS: [[usize; 4]; 6] = {
+    let (f, u, r, b, d, l) = (0, 1, 2, 3, 4, 5);
     [
-        [R, D, L, U],
-        [R, F, L, B],
-        [B, D, F, U],
-        [L, D, R, U],
-        [R, B, L, F],
-        [F, D, B, U],
+        [r, d, l, u],
+        [r, f, l, b],
+        [b, d, f, u],
+        [l, d, r, u],
+        [r, b, l, f],
+        [f, d, b, u],
     ]
 };
 
-// Computes the position and rotation of each face in the cube.
+// Computes the position and rotation of each face in the cube. The cube faces are just numbers from
+// 0 to 5 and are the indexes of this array. The rotation of a face is a number from 0 to 3 that
+// represents how the face is rotated in the 2D map with respect to the neighbor order in
+// FACE_CONNECTIONS.
 fn get_cube_faces(map: &Map, cube_size: i32) -> [(Point, usize); 6] {
     let front_face_x = map[0].iter().position(|x| !matches!(x, Empty)).expect("") as i32;
     let mut faces = [None; 6];
-    faces[Face::F as usize] = Some(((front_face_x, 0), 0));
+    faces[0] = Some(((front_face_x, 0), 0));
 
-    let mut face_queue = VecDeque::from_iter([Face::F]);
+    let mut face_queue = VecDeque::from_iter([0]);
     while let Some(face) = face_queue.pop_front() {
-        let (face_pos, face_rot) = faces[face as usize].expect("face info should exist");
+        let (face_pos, face_rot) = faces[face].expect("face info should exist");
         for (i, (dx, dy)) in DIRECTIONS.iter().enumerate() {
             let neighbor_pos = point_add(face_pos, (dx * cube_size, dy * cube_size));
             if get_tile_non_wrapping(neighbor_pos, map) == Empty {
                 continue;
             }
-            let neighbor_face = FACE_CONNECTIONS[face as usize][(i + face_rot) % 4];
-            if faces[neighbor_face as usize].is_some() {
+            let neighbor_face = FACE_CONNECTIONS[face][(i + face_rot) % 4];
+            if faces[neighbor_face].is_some() {
                 continue;
             }
-            let face_rot_from_neighbor = FACE_CONNECTIONS[neighbor_face as usize]
+            let face_rot_from_neighbor = FACE_CONNECTIONS[neighbor_face]
                 .iter()
                 .position(|f| *f == face)
                 .unwrap();
             let neighbor_rot = (face_rot_from_neighbor + 2 + 4 - i) % 4;
-            faces[neighbor_face as usize] = Some((neighbor_pos, neighbor_rot));
+            faces[neighbor_face] = Some((neighbor_pos, neighbor_rot));
             face_queue.push_back(neighbor_face);
         }
     }
