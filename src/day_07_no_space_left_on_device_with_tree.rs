@@ -87,7 +87,10 @@ fn parse_fs_from_terminal_output(terminal_output: &str) -> FsNode {
             let mut curr_dir_children = &mut root_children;
             for &name in curr_dir_stack.iter() {
                 let child = curr_dir_children.get_mut(name);
-                let Some(FsNode::Dir { children: child_dir_children}) = child else {
+                let Some(FsNode::Dir {
+                    children: child_dir_children,
+                }) = child
+                else {
                     panic!("curr_dir should have child directory {name}");
                 };
                 curr_dir_children = child_dir_children;
