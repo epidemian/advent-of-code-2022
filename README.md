@@ -13,7 +13,7 @@ I recorded myself solving these puzzles to try to maintain focus and finish them
 - (optional) Better error handling
 - (optional) Use vanilla Rust; no external dependencies, except for a couple of exceptions:
   - Rayon, which is awesome :)
-  - fxhash, which is just the std `Hash{Set,Map}` but faster.
+  - rustc-hash, which is a faster alternative to the std `Hash{Set,Map}`.
 
 ## Notes & Learnings
 

@@ -1,4 +1,4 @@
-use fxhash::FxHashMap as HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 pub fn run(input: &str) -> String {
     let (mut elves, mut map) = parse_input(input);

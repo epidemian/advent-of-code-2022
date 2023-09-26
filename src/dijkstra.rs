@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use fxhash::FxHashMap as HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 // Calculates the shortest path distance between a given start node and a goal using Dijkstra's
 // algorithm. The goal is given as a predicate function instead of a node so that the caller can
