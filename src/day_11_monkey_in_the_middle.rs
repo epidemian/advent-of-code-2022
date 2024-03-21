@@ -100,9 +100,7 @@ impl Monkey {
         mod_divisor: u64,
         relief_after_inspection: bool,
     ) -> Option<(u64, usize)> {
-        let Some(item) = self.items.pop_front() else {
-            return None;
-        };
+        let item = self.items.pop_front()?;
         self.inspections_count += 1;
         let mut new_worry_level = self.operation.call(item) % mod_divisor;
         if relief_after_inspection {

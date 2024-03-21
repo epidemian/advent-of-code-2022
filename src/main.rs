@@ -81,7 +81,7 @@ fn main() -> ExitCode {
         1 => {
             let results: Vec<_> = (1..=days.len())
                 .into_par_iter()
-                .map(|day_num| run_single_day(day_num))
+                .map(run_single_day)
                 .collect();
 
             for result in results {
